@@ -1,111 +1,364 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+/* ─────────────────────────────────────────────────────
+   AgriSmart AI — Global Stylesheet
+   Font loaded via <link> in index.html (Plus Jakarta Sans)
+   ───────────────────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+/* ─── Base resets ─────────────────────────────────── */
+@layer base {
+  html {
+    font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #f0fdf4; /* forest-50 */
+    color: #14532d;             /* forest-900 */
+    min-height: 100vh;
+    line-height: 1.5;
+  }
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* Override ANY old Vite-scaffold #root styles */
+  #root {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+    border: none !important;
+    min-height: 100vh;
+    display: block !important;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+    margin: 0;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  img, svg {
+    display: block;
+  }
+
+  /* Dark mode body */
+  .dark body {
+    background-color: #052e16;
+    color: #dcfce7;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+/* ─── Component classes ───────────────────────────── */
+@layer components {
+
+  /* ── Sidebar ──────────────────────────────────────── */
+  .sidebar {
+    @apply fixed top-0 left-0 h-full w-64 bg-forest-900 z-40 flex flex-col;
+    @apply transition-transform duration-300 ease-in-out;
+    /* Ensure it's always visible on desktop */
   }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  .sidebar-overlay {
+    @apply fixed inset-0 bg-black/50 z-30 lg:hidden;
+  }
+
+  /* ── Cards ────────────────────────────────────────── */
+  .agri-card {
+    @apply bg-white rounded-2xl border border-forest-100 p-6;
+    box-shadow: 0 1px 3px 0 rgba(20, 83, 45, 0.08), 0 4px 12px 0 rgba(20, 83, 45, 0.06);
+  }
+
+  .metric-card {
+    @apply agri-card flex flex-col gap-2;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .metric-card:hover {
+    box-shadow: 0 4px 16px 0 rgba(20, 83, 45, 0.12), 0 1px 4px 0 rgba(20, 83, 45, 0.08);
+  }
+
+  /* ── Buttons ──────────────────────────────────────── */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm;
+    background-color: #15803d; /* forest-700 */
+    color: #ffffff;
+    border: none;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-primary:hover {
+    background-color: #166534; /* forest-800 */
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm;
+    background-color: #ffffff;
+    color: #166534; /* forest-800 */
+    border: 1px solid #bbf7d0; /* forest-200 */
+    transition: background-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-secondary:hover {
+    background-color: #f0fdf4; /* forest-50 */
+  }
+
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm;
+    color: #16a34a; /* forest-600 */
+    background: transparent;
+    border: none;
+    transition: background-color 0.15s ease;
+  }
+
+  .btn-ghost:hover {
+    background-color: #dcfce7; /* forest-100 */
+  }
+
+  /* ── Badges ───────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-green {
+    @apply badge;
+    background-color: #dcfce7;
+    color: #15803d;
+  }
+
+  .badge-amber {
+    @apply badge;
+    background-color: #fef3c7;
+    color: #d97706;
+  }
+
+  .badge-red {
+    @apply badge;
+    background-color: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .badge-blue {
+    @apply badge;
+    background-color: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  .badge-proto {
+    @apply badge;
+    background-color: #fef3c7;
+    color: #b45309;
+  }
+
+  /* ── Form inputs ──────────────────────────────────── */
+  .agri-input {
+    @apply w-full rounded-xl text-sm;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #bbf7d0; /* forest-200 */
+    background-color: #ffffff;
+    color: #14532d; /* forest-900 */
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .agri-input::placeholder {
+    color: #4ade80; /* forest-400 */
+  }
+
+  .agri-input:focus {
+    border-color: #22c55e; /* forest-500 */
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+  }
+
+  .agri-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: #16a34a; /* forest-600 */
+    margin-bottom: 0.25rem;
+  }
+
+  .agri-select {
+    @apply agri-input;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  /* ── Alert banners ────────────────────────────────── */
+  .proto-banner {
+    @apply flex items-start gap-3 p-4 rounded-xl text-sm;
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+  }
+
+  .error-banner {
+    @apply flex items-center gap-3 p-4 rounded-xl text-sm;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+  }
+
+  /* ── Upload zone ──────────────────────────────────── */
+  .upload-zone {
+    @apply rounded-2xl text-center cursor-pointer;
+    border: 2px dashed #86efac; /* forest-300 */
+    padding: 3rem;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .upload-zone:hover,
+  .upload-zone.drag-active {
+    border-color: #22c55e; /* forest-500 */
+    background-color: #f0fdf4; /* forest-50 */
+  }
+
+  /* ── Chat bubbles ─────────────────────────────────── */
+  .bubble-user {
+    align-self: flex-end;
+    max-width: 80%;
+    background-color: #15803d; /* forest-700 */
+    color: #ffffff;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem 1rem 0.25rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .bubble-bot {
+    align-self: flex-start;
+    max-width: 80%;
+    background-color: #ffffff;
+    border: 1px solid #dcfce7; /* forest-100 */
+    color: #14532d; /* forest-900 */
+    padding: 0.75rem 1rem;
+    border-radius: 1rem 1rem 1rem 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    box-shadow: 0 1px 3px 0 rgba(20, 83, 45, 0.08);
+  }
+
+  /* ── Page header ──────────────────────────────────── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #14532d; /* forest-900 */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.875rem;
+    color: #16a34a; /* forest-600 */
+    margin-top: 0.125rem;
+  }
+
+  /* ── Nav item ─────────────────────────────────────── */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #86efac; /* forest-300 */
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .nav-item:hover {
+    background-color: #166534; /* forest-800 */
+    color: #ffffff;
+  }
+
+  .nav-item.active {
+    background-color: #15803d; /* forest-700 */
+    color: #ffffff;
+  }
+
+  /* ── Rec card ─────────────────────────────────────── */
+  .rec-card {
+    @apply agri-card;
+    border-left: 4px solid #22c55e; /* forest-500 */
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  /* ── Score ring ───────────────────────────────────── */
+  .score-ring {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 2.25rem;
+    width: 7rem;
+    height: 7rem;
   }
 }
 
-body {
-  margin: 0;
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+/* ─── Utility animations ──────────────────────────── */
+@layer utilities {
+  .spin {
+    animation: agri-spin 1s linear infinite;
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+  @keyframes agri-spin {
+    to { transform: rotate(360deg); }
   }
-}
-p {
-  margin: 0;
-}
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
+  .slide-up {
+    animation: agri-slide-up 0.4s ease;
+  }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  @keyframes agri-slide-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 }
