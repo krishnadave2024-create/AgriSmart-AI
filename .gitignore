@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+data/external/
+model/checkpoints/
+data/reports/*.png
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,16 @@
+image_path,class_label,source,split
+data/external/development_dataset/raw/diseased/diseased_0043.jpg,diseased,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/healthy/healthy_0025.jpg,healthy,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/healthy/healthy_0005.jpg,healthy,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/diseased/diseased_0014.jpg,diseased,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/diseased/diseased_0022.jpg,diseased,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/healthy/healthy_0035.jpg,healthy,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/diseased/diseased_0038.jpg,diseased,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/healthy/healthy_0016.jpg,healthy,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/diseased/diseased_0007.jpg,diseased,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/diseased/diseased_0010.jpg,diseased,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/diseased/diseased_0040.jpg,diseased,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/healthy/healthy_0008.jpg,healthy,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/healthy/healthy_0006.jpg,healthy,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/healthy/healthy_0034.jpg,healthy,ayerr/plant-disease-classification,validation
+data/external/development_dataset/raw/healthy/healthy_0043.jpg,healthy,ayerr/plant-disease-classification,validation

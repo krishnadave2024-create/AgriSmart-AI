@@ -1,0 +1,22 @@
+{
+    "dataset_name": "PlantVillage-Tiny-Sample",
+    "type": "DEVELOPMENT DATASET \u2014 NOT OFFICIAL SIH DATA",
+    "total_images": 10,
+    "num_classes": 2,
+    "classes": [
+        "Tomato___Bacterial_spot",
+        "Tomato___healthy"
+    ],
+    "images_per_class": {
+        "Tomato___Bacterial_spot": 5,
+        "Tomato___healthy": 5
+    },
+    "image_formats": [
+        ".jpg"
+    ],
+    "image_dimensions": [
+        "256x256"
+    ],
+    "corrupted_images": [],
+    "empty_directories": []
+}
