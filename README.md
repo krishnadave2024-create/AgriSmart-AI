@@ -4,14 +4,57 @@ Intelligent Agriculture for a Sustainable Future
 ## Project Overview
 AgriSmart AI is a production-quality agricultural decision-support platform designed to help farmers with crucial, data-driven decisions. The platform leverages modern machine learning and a robust web architecture to deliver accurate, localized insights.
 
-## Dataset Information
-- **Development Dataset**: `ayerr/plant-disease-classification` (Hugging Face)
+## Development Dataset Information
+- **Dataset**: `ayerr/plant-disease-classification` (Hugging Face)
 - **Status**: Development and prototyping only. **The official SIH field-condition dataset remains unverified and unavailable.**
 - **Preparation**: Run `python extract_ayerr_subset.py` followed by `python inspect_development_dataset.py` and `python create_development_manifest.py`.
-- **Storage**: Downloaded images are stored locally in `data/external/development_dataset/raw/`. They are excluded from version control to save space.
-- The official test set must be evaluated separately when provided.
+- **Storage**: Downloaded images are stored locally in `data/external/development_dataset/raw/`. They are excluded from version control.
 
-## Planned Modules
+## Running the Application
+
+### Backend (Django)
+1. Install requirements: `pip install -r requirements.txt`
+2. Navigate to backend: `cd backend`
+3. Run migrations: `python manage.py migrate`
+4. Start server: `python manage.py runserver`
+
+### Frontend (React/Vite)
+1. Navigate to frontend: `cd frontend`
+2. Install dependencies: `npm install`
+3. Start dev server: `npm run dev`
+
+## API Endpoints
+
+### `POST /api/disease/predict/`
+**Description**: Analyzes a leaf image for crop disease.
+**Note**: This endpoint uses a **development prototype model** trained on ~100 images (2 classes). It is NOT production-ready and does not represent the final SIH evaluation model. The official SIH dataset is unavailable.
+
+**Request**:
+- Content-Type: `multipart/form-data`
+- Body: `image` (File: JPG/PNG, max 10MB)
+
+**Success Response** (200 OK):
+```json
+{
+  "success": true,
+  "predicted_class": "diseased",
+  "confidence": 0.985,
+  "model_status": "development_prototype",
+  "warning": "This model was trained on a very small development dataset and is not production-ready."
+}
+```
+
+**Error Response** (400/500):
+```json
+{
+  "success": false,
+  "error": "Model checkpoint is unavailable. Please run training to generate the checkpoint."
+}
+```
+
+## Testing
+- Backend API tests: `cd backend` then `python manage.py test api`
+- Inference script test: `python model/predict.py --image path/to/image.jpg`
 1. **Crop Disease Detection (Core)**: A computer vision model to classify crop diseases from leaf imagery.
 2. **Crop Recommendation**: ML-based recommendations on which crops to plant based on soil and environmental factors.
 3. **Smart Irrigation**: Predictive modeling to suggest optimal irrigation schedules.
