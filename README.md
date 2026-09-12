@@ -52,14 +52,60 @@ AgriSmart AI is a production-quality agricultural decision-support platform desi
 }
 ```
 
+### `POST /api/crops/recommend/`
+**Description**: Provides a ranked list of suitable crops based on soil and climate conditions.
+**Note**: This is a transparent rule-based prototype engine.
+
+**Request**:
+- Content-Type: `application/json`
+- Body: `nitrogen`, `phosphorus`, `potassium`, `ph`, `temperature`, `humidity`, `rainfall`
+
+**Success Response** (200 OK):
+```json
+{
+  "success": true,
+  "recommendations": [
+    {"crop": "Rice", "suitability_score": 85, "reason": "High rainfall..."}
+  ],
+  "model_status": "development_prototype",
+  "warning": "Recommendations are prototype rule-based estimates..."
+}
+```
+
+### `POST /api/irrigation/recommend/`
+**Description**: Provides irrigation priority and weather-based insights.
+**Note**: This is a transparent rule-based prototype. No IoT or hardware sensors are integrated.
+
+**Request**:
+- Content-Type: `application/json`
+- Body: `crop`, `temperature`, `rainfall`, `soil_moisture` (optional), `humidity` (optional), `growth_stage` (optional)
+
+**Success Response** (200 OK):
+```json
+{
+  "success": true,
+  "irrigation_priority": "Urgent irrigation recommended",
+  "recommended_action": "Apply irrigation immediately...",
+  "insights": [{"type": "weather", "severity": "high", "message": "Heavy rain expected."}],
+  "model_status": "development_prototype",
+  "warning": "This is a prototype advisory..."
+}
+```
+
+## Prototype Limitations & Exclusions
+- **Development Models Only**: The crop disease model is trained on a tiny development dataset (~100 images, 2 classes). It is not production-ready.
+- **Rule-based Logic**: Crop recommendations and irrigation insights are currently generated using explicit, rule-based prototype logic, not trained ML models.
+- **No IoT Integration**: There is no live hardware sensor or IoT integration included in this prototype.
+- **No Agentic AI**: Agentic AI generation is not yet implemented.
+- **Official Dataset**: The official SIH field-condition dataset remains unverified and unavailable.
+
+## Configuration
+Optional external services can be configured via environment variables. See `.env.example` for available variables.
+- `WEATHER_API_KEY`: (Optional) External weather service key for live mode.
+
 ## Testing
 - Backend API tests: `cd backend` then `python manage.py test api`
-- Inference script test: `python model/predict.py --image path/to/image.jpg`
-1. **Crop Disease Detection (Core)**: A computer vision model to classify crop diseases from leaf imagery.
-2. **Crop Recommendation**: ML-based recommendations on which crops to plant based on soil and environmental factors.
-3. **Smart Irrigation**: Predictive modeling to suggest optimal irrigation schedules.
-4. **Weather-Based Intelligence**: Forecasting and weather-driven insights.
-5. **Sustainability Score**: Metrics and advice on sustainable farming practices.
+- Frontend Build test: `cd frontend` then `npm run build` on sustainable farming practices.
 6. **Farmer Assistant**: A multilingual (English/Hindi/Gujarati) assistant for farmers.
 7. **FieldGuard**: An integrated risk engine combining the above modules to assess overall farm risk.
 

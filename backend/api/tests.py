@@ -57,3 +57,68 @@ class PredictAPITestCase(TestCase):
                 self.assertEqual(data['predicted_class'], 'diseased')
                 self.assertIn('confidence', data)
                 self.assertEqual(data['model_status'], 'development_prototype')
+
+
+class RecommendCropAPITestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.url = reverse('recommend_crop')
+        
+    def test_missing_fields(self):
+        response = self.client.post(self.url, {'nitrogen': 10, 'ph': 6.5}, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.json()['success'])
+        
+    def test_invalid_numeric_values(self):
+        response = self.client.post(self.url, {
+            'nitrogen': 'abc', 'phosphorus': 10, 'potassium': 10, 
+            'ph': 6.5, 'temperature': 25, 'humidity': 60, 'rainfall': 100
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('must be a valid number', response.json()['error'])
+        
+    def test_negative_values(self):
+        response = self.client.post(self.url, {
+            'nitrogen': -10, 'phosphorus': 10, 'potassium': 10, 
+            'ph': 6.5, 'temperature': 25, 'humidity': 60, 'rainfall': 100
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('cannot be negative', response.json()['error'])
+        
+    def test_valid_request(self):
+        response = self.client.post(self.url, {
+            'nitrogen': 120, 'phosphorus': 50, 'potassium': 40, 
+            'ph': 6.5, 'temperature': 25, 'humidity': 80, 'rainfall': 150
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertIn('recommendations', data)
+        self.assertEqual(data['model_status'], 'development_prototype')
+
+class RecommendIrrigationAPITestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.url = reverse('recommend_irrigation')
+        
+    def test_missing_weather_fields(self):
+        response = self.client.post(self.url, {'crop': 'Wheat'}, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Temperature and rainfall are required', response.json()['error'])
+        
+    def test_invalid_moisture_percentage(self):
+        response = self.client.post(self.url, {
+            'temperature': 30, 'rainfall': 10, 'soil_moisture': 150
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Soil moisture must be a percentage', response.json()['error'])
+        
+    def test_valid_irrigation_request(self):
+        response = self.client.post(self.url, {
+            'temperature': 36, 'rainfall': 0, 'soil_moisture': 20, 'humidity': 40
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['irrigation_priority'], 'Urgent irrigation recommended')
+        self.assertEqual(data['model_status'], 'development_prototype')
