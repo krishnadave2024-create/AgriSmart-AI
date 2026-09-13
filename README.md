@@ -92,9 +92,49 @@ AgriSmart AI is a production-quality agricultural decision-support platform desi
 }
 ```
 
+### `POST /api/sustainability/score/`
+**Description**: Calculates an explainable prototype sustainability score based on farming practices.
+**Note**: This is a transparent rule-based prototype engine, not a certified metric.
+
+**Request**:
+- Content-Type: `application/json`
+- Body: `crop_rotation` (bool), `organic_fertilizer` (bool), `rainwater_harvesting` (bool), `soil_conservation` (bool), `crop_residue_management` (bool), `chemical_fertilizer_level` ('low'|'medium'|'high'), `pesticide_level` ('low'|'medium'|'high')
+
+**Success Response** (200 OK):
+```json
+{
+  "success": true,
+  "score": 72,
+  "category": "Good",
+  "positive_factors": ["Crop rotation practice is being followed."],
+  "improvement_suggestions": ["Implement rainwater harvesting..."],
+  "model_status": "development_prototype"
+}
+```
+
+### `POST /api/assistant/message/`
+**Description**: A multilingual prototype farmer assistant with predefined intent-based rules.
+**Note**: This does not use Agentic AI. It provides predefined safe guidance for specific topics. Supported languages are `en`, `hi`, `gu`.
+
+**Request**:
+- Content-Type: `application/json`
+- Body: `message` (string), `language` (string - 'en', 'hi', 'gu')
+
+**Success Response** (200 OK):
+```json
+{
+  "success": true,
+  "language": "hi",
+  "intent": "irrigation",
+  "response": "सिंचाई का निर्णय मिट्टी की नमी...",
+  "model_status": "development_prototype"
+}
+```
+
 ## Prototype Limitations & Exclusions
 - **Development Models Only**: The crop disease model is trained on a tiny development dataset (~100 images, 2 classes). It is not production-ready.
-- **Rule-based Logic**: Crop recommendations and irrigation insights are currently generated using explicit, rule-based prototype logic, not trained ML models.
+- **Rule-based Logic**: Crop recommendations, irrigation insights, and the sustainability score are generated using explicit, rule-based prototype logic.
+- **Predefined Assistant**: The Farmer Assistant uses safe, predefined rule-based translations and is not a generative AI.
 - **No IoT Integration**: There is no live hardware sensor or IoT integration included in this prototype.
 - **No Agentic AI**: Agentic AI generation is not yet implemented.
 - **Official Dataset**: The official SIH field-condition dataset remains unverified and unavailable.
@@ -138,3 +178,24 @@ To set up the Python environment for the ML and backend components:
 - `model/`: ML model training code and architectures.
 - `data/`: Datasets (raw and processed). *Note: The official held-out test set must never be placed here during training.*
 - `report/`: Project reports and documentation.
+
+### FieldGuard API
+FieldGuard is an integrated risk engine that computes a composite deterministic risk score (0-100) based on manually entered or predefined input factors.
+- **Endpoint:** `POST /api/fieldguard/assess/`
+- **Request Format:**
+  - `crop` (string)
+  - `growth_stage` (string)
+  - `disease_label` (string)
+  - `disease_confidence` (float 0-1)
+  - `soil_moisture` (float %)
+  - `rainfall` (float mm)
+  - `temperature` (float °C)
+  - `humidity` (float %)
+  - `sustainability_score` (float)
+- **Response Format:**
+  - `score` (integer 0-100)
+  - `category` (string: Low, Moderate, High, Critical Risk)
+  - `factors` (list of contributing factor dictionaries)
+  - `preventive_actions` (list of suggested actions)
+- **Calculation Formula:** Base score is 100. Specific penalties are deducted for critical threshold violations (e.g. moisture < 30%, temp > 35°C, disease presence). The score is bounded between 0 and 100.
+- **Limitations:** This is an explainable prototype. It relies on manually entered inputs unless integrated with other systems. It is not powered by agentic AI, live weather data, IoT telemetry, or machine learning (beyond the passed disease confidence).
