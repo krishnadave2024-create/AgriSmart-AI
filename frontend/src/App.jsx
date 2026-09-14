@@ -32,6 +32,9 @@ const NAV_ITEMS = [
 
 function Sidebar({ open, onClose }) {
   const location = useLocation()
+  const { user } = useAuth()
+  
+  const displayFarmName = user?.has_farm_profile ? user.farm_name : 'Farm profile incomplete'
 
   return (
     <>
@@ -70,7 +73,7 @@ function Sidebar({ open, onClose }) {
         {/* Farm indicator */}
         <div className="mx-4 mt-4 mb-2 px-3 py-2.5 rounded-xl bg-forest-800 flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-forest-400 flex-shrink-0" />
-          <span className="text-forest-200 text-xs font-medium truncate">My Farm</span>
+          <span className="text-forest-200 text-xs font-medium truncate">{displayFarmName}</span>
           <ChevronRight size={14} className="ml-auto text-forest-500 flex-shrink-0" />
         </div>
 
@@ -107,7 +110,7 @@ function Sidebar({ open, onClose }) {
               U
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-forest-200 text-xs font-semibold truncate">My Profile</div>
+              <div className="text-forest-200 text-xs font-semibold truncate">{user?.full_name || user?.username || 'My Profile'}</div>
             </div>
           </NavLink>
           <NavLink to="/farm-profile" onClick={onClose} className={({ isActive }) => `flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer ${isActive ? 'bg-forest-800' : 'hover:bg-forest-800/50'}`}>
@@ -127,6 +130,19 @@ function Sidebar({ open, onClose }) {
 function TopBar({ onMenuClick, dark, onToggleDark }) {
   const [showNotif, setShowNotif] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const { user, logout } = useAuth();
+
+  const getInitials = (name, fallback) => {
+    if (!name) return fallback ? fallback.charAt(0).toUpperCase() : 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  };
+
+  const initials = getInitials(user?.full_name, user?.username);
+  const displayFarmName = user?.has_farm_profile ? user.farm_name : 'My Farm';
 
   return (
     <header className="sticky top-0 z-20 flex items-center gap-3 bg-white/90 dark:bg-forest-950/90 backdrop-blur border-b border-forest-100 dark:border-forest-800 px-4 py-3 lg:px-6">
@@ -141,7 +157,7 @@ function TopBar({ onMenuClick, dark, onToggleDark }) {
       {/* Breadcrumb demo */}
       <div className="hidden sm:flex items-center gap-1.5 text-sm text-forest-500 dark:text-forest-400 font-medium">
         <Leaf size={14} className="text-forest-600 dark:text-forest-400" />
-        <span className="text-forest-700 dark:text-forest-300">Green Acres</span>
+        <span className="text-forest-700 dark:text-forest-300">{displayFarmName}</span>
         <ChevronRight size={14} />
         <span>Overview</span>
       </div>
@@ -192,18 +208,19 @@ function TopBar({ onMenuClick, dark, onToggleDark }) {
           onClick={() => setShowMenu(!showMenu)}
           aria-label="Open account menu"
         >
-          U
+          {initials}
         </div>
 
         {showMenu && (
-          <div className="absolute top-12 right-0 w-48 bg-white dark:bg-forest-900 border border-forest-100 dark:border-forest-700 rounded-xl shadow-agri-md p-2 z-50">
+          <div className="absolute top-12 right-0 w-56 bg-white dark:bg-forest-900 border border-forest-100 dark:border-forest-700 rounded-xl shadow-agri-md p-2 z-50">
             <div className="p-2 border-b border-forest-100 dark:border-forest-800 mb-2">
-              <div className="font-semibold text-forest-900 dark:text-forest-100">Farmer</div>
-              <div className="text-xs text-forest-500 dark:text-forest-400">Settings</div>
+              <div className="font-semibold text-forest-900 dark:text-forest-100 truncate">{user?.full_name || user?.username}</div>
+              <div className="text-xs text-forest-500 dark:text-forest-400 truncate">{user?.email}</div>
+              <div className="text-xs text-forest-500 dark:text-forest-400 mt-1 uppercase">{user?.preferred_language || 'EN'}</div>
             </div>
             <NavLink to="/profile" className="block w-full text-left px-2 py-1.5 text-sm text-forest-700 dark:text-forest-300 hover:bg-forest-50 dark:hover:bg-forest-800 rounded-lg" onClick={() => setShowMenu(false)}>Profile</NavLink>
             <NavLink to="/farm-profile" className="block w-full text-left px-2 py-1.5 text-sm text-forest-700 dark:text-forest-300 hover:bg-forest-50 dark:hover:bg-forest-800 rounded-lg" onClick={() => setShowMenu(false)}>Farm Profile</NavLink>
-            <button className="w-full text-left px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg mt-1" onClick={() => { setShowMenu(false); window.location.href='/login'; localStorage.clear(); }}>Logout</button>
+            <button className="w-full text-left px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg mt-1" onClick={() => { setShowMenu(false); logout(); }}>Logout</button>
           </div>
         )}
       </div>

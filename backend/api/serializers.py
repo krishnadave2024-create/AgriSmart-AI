@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import UserProfile, FarmProfile
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,9 +32,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if data.get('password') != data.get('confirm_password'):
-            raise serializers.ValidationError({"password": "Passwords must match."})
+            raise serializers.ValidationError({"confirm_password": "Passwords must match."})
         if User.objects.filter(email=data.get('email')).exists():
             raise serializers.ValidationError({"email": "A user with that email already exists."})
+            
+        try:
+            validate_password(data.get('password'))
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+            
         return data
 
     def create(self, validated_data):

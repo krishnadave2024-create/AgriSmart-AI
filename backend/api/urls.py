@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import predict_disease, recommend_crop, recommend_irrigation, sustainability_score, farmer_assistant, fieldguard_assess, register_user, user_profile, farm_profile, logout_user, current_user
+from .views import predict_disease, disease_history, recommend_crop, crop_history, current_weather, weather_forecast, recommend_irrigation, irrigation_history, sustainability_score, farmer_assistant, fieldguard_assess, fieldguard_history, register_user, user_profile, farm_profile, logout_user, current_user, dashboard_summary
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -11,9 +11,16 @@ urlpatterns = [
     path('profile/', user_profile, name='user_profile'),
     path('farm/', farm_profile, name='farm_profile'),
     path('disease/predict/', predict_disease, name='predict_disease'),
+    path('disease/history/', disease_history, name='disease_history'),
     path('crops/recommend/', recommend_crop, name='recommend_crop'),
+    path('crops/history/', crop_history, name='crop_history'),
+    path('weather/current/', current_weather, name='current_weather'),
+    path('weather/forecast/', weather_forecast, name='weather_forecast'),
     path('irrigation/recommend/', recommend_irrigation, name='recommend_irrigation'),
+    path('irrigation/history/', irrigation_history, name='irrigation_history'),
     path('sustainability/score/', sustainability_score, name='sustainability_score'),
     path('assistant/message/', farmer_assistant, name='farmer_assistant'),
     path('fieldguard/assess/', fieldguard_assess, name='fieldguard_assess'),
+    path('fieldguard/history/', fieldguard_history, name='fieldguard_history'),
+    path('dashboard/summary/', dashboard_summary, name='dashboard_summary'),
 ]

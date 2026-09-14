@@ -37,13 +37,26 @@ export default function Register() {
       formData.username, 
       formData.email, 
       formData.fullName, 
-      formData.password
+      formData.password,
+      formData.confirmPassword
     );
     
     if (result.success) {
       navigate('/');
     } else {
-      setError(typeof result.error === 'object' ? JSON.stringify(result.error) : result.error);
+      if (typeof result.error === 'object' && result.error !== null) {
+        // Format object errors nicely (e.g. {"email": ["A user with that email already exists."]})
+        const errorMessages = Object.entries(result.error)
+          .map(([field, msgs]) => {
+            const fieldName = field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' ');
+            const msg = Array.isArray(msgs) ? msgs[0] : msgs;
+            return `${fieldName}: ${msg}`;
+          })
+          .join('\n');
+        setError(errorMessages || 'Registration failed');
+      } else {
+        setError(result.error || 'Registration failed');
+      }
     }
     setLoading(false);
   };
@@ -60,7 +73,7 @@ export default function Register() {
         </div>
 
         {error && (
-          <div className="mb-6 p-3 rounded-xl bg-red-50 text-red-600 text-sm border border-red-100">
+          <div className="mb-6 p-3 rounded-xl bg-red-50 text-red-600 text-sm border border-red-100 whitespace-pre-line">
             {error}
           </div>
         )}

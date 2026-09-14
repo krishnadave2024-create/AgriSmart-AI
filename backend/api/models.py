@@ -36,3 +36,82 @@ class FarmProfile(models.Model):
 
     def __str__(self):
         return self.farm_name
+
+class DiseaseScan(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='disease_scans')
+    image = models.ImageField(upload_to='disease_scans/', blank=True, null=True)
+    predicted_class = models.CharField(max_length=255)
+    confidence = models.FloatField(blank=True, null=True)
+    model_version = models.CharField(max_length=50, default='baseline_resnet18')
+    is_development = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.predicted_class} ({self.confidence:.2f})"
+
+class CropRecommendationRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='crop_recommendations')
+    farm_profile = models.ForeignKey('FarmProfile', on_delete=models.SET_NULL, null=True, blank=True)
+    nitrogen = models.FloatField()
+    phosphorus = models.FloatField()
+    potassium = models.FloatField()
+    ph = models.FloatField()
+    temperature = models.FloatField()
+    humidity = models.FloatField()
+    rainfall = models.FloatField()
+    weather_source = models.CharField(max_length=50, default='manual')
+    recommendation_method = models.CharField(max_length=50, default='rule-based')
+    top_recommendation = models.CharField(max_length=100, blank=True, null=True)
+    explanation = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class IrrigationAssessment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='irrigation_assessments')
+    farm_profile = models.ForeignKey('FarmProfile', on_delete=models.SET_NULL, null=True, blank=True)
+    crop = models.CharField(max_length=100, blank=True, null=True)
+    growth_stage = models.CharField(max_length=100, blank=True, null=True)
+    field_area = models.FloatField(blank=True, null=True)
+    irrigation_method = models.CharField(max_length=100, blank=True, null=True)
+    soil_moisture = models.FloatField(blank=True, null=True)
+    temperature = models.FloatField()
+    humidity = models.FloatField(blank=True, null=True)
+    rainfall = models.FloatField()
+    priority = models.CharField(max_length=100)
+    reasoning = models.TextField(blank=True, null=True)
+    input_sources = models.CharField(max_length=100, default='manual')
+    rule_version = models.CharField(max_length=50, default='v1.0')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class FieldGuardAssessment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='fieldguard_assessments')
+    farm_profile = models.ForeignKey('FarmProfile', on_delete=models.SET_NULL, null=True, blank=True)
+    crop = models.CharField(max_length=100, blank=True, null=True)
+    growth_stage = models.CharField(max_length=100, blank=True, null=True)
+    disease_scan = models.ForeignKey('DiseaseScan', on_delete=models.SET_NULL, null=True, blank=True)
+    temperature = models.FloatField(blank=True, null=True)
+    humidity = models.FloatField(blank=True, null=True)
+    rainfall = models.FloatField(blank=True, null=True)
+    soil_moisture = models.FloatField(blank=True, null=True)
+    weather_source = models.CharField(max_length=50, default='manual')
+    score = models.FloatField()
+    category = models.CharField(max_length=50)
+    factors = models.JSONField(default=list)
+    preventive_actions = models.JSONField(default=list)
+    rule_version = models.CharField(max_length=50, default='v1.0')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class SustainabilityAssessment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sustainability_assessments')
+    score = models.FloatField()
+    category = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class ActivityRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    activity_type = models.CharField(max_length=100)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']

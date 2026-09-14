@@ -1,175 +1,178 @@
-import { ScanLine, Leaf, Droplets, Globe, Activity, Info } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { ScanLine, Leaf, Droplets, Globe, Activity, Info, Loader2 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
-
-/* ─── Demo metric cards (clearly marked as demo data) ──────────────────── */
-const METRICS = [
-  {
-    label: 'Crop Health Index',
-    value: '92%',
-    sub: '+4.2% this week',
-    trend: 'up',
-    icon: Activity,
-    color: 'text-forest-600',
-    bg: 'bg-forest-50',
-    border: 'border-forest-200',
-    demo: true,
-  },
-  {
-    label: 'Disease Risk',
-    value: 'Low',
-    sub: 'No flagged detections',
-    trend: 'good',
-    icon: ScanLine,
-    color: 'text-forest-600',
-    bg: 'bg-forest-50',
-    border: 'border-forest-200',
-    demo: true,
-  },
-  {
-    label: 'Soil Moisture',
-    value: '68%',
-    sub: 'Manual input · Optimal zone',
-    trend: 'stable',
-    icon: Droplets,
-    color: 'text-blue-600',
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    demo: true,
-  },
-  {
-    label: 'Sustainability Score',
-    value: '84',
-    sub: '/ 100 · Excellent',
-    trend: 'up',
-    icon: Globe,
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-200',
-    demo: true,
-  },
-]
-
-/* ─── Advisory items (prototype rule-based, clearly labeled) ─────────────── */
-const ADVISORY = [
-  {
-    priority: 'HIGH',
-    priorityClass: 'badge-red',
-    title: 'Delay Tube-Well Irrigation',
-    why: 'Rainfall forecast (manual input) indicates precipitation expected in 24h. Running irrigation now may cause water waste.',
-    action: 'Hold irrigation until tomorrow morning and reassess soil moisture.',
-    feature: '/irrigation',
-    featureLabel: 'Check Irrigation',
-  },
-  {
-    priority: 'MEDIUM',
-    priorityClass: 'badge-amber',
-    title: 'Inspect Lower Canopy for Fungal Risk',
-    why: 'High humidity (manual input) above 85% combined with temperatures above 25°C creates conditions suitable for fungal growth.',
-    action: 'Visually inspect the lower canopy of your crop and check for spots or discolouration.',
-    feature: '/disease',
-    featureLabel: 'Disease Detection',
-  },
-  {
-    priority: 'OPTIMAL',
-    priorityClass: 'badge-green',
-    title: 'Crop Rotation Planning Window',
-    why: "Approaching end of current crop cycle — consider planning next season's rotation for soil health.",
-    action: 'Use the Crop Recommendation tool to find suitable follow-on crops.',
-    feature: '/crops',
-    featureLabel: 'Crop Recommendation',
-  },
-]
-
-/* ─── Recent activities (demo) ─────────────────────────────────────────── */
-const ACTIVITIES = [
-  { icon: ScanLine, text: 'Disease scan completed — No disease detected', time: '2h ago', color: 'text-forest-600', bg: 'bg-forest-50' },
-  { icon: Droplets, text: 'Irrigation advisory updated — Delay recommended', time: '4h ago', color: 'text-blue-600', bg: 'bg-blue-50' },
-  { icon: Leaf, text: 'Crop recommendation run — Rice (85), Maize (82)', time: 'Yesterday', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-]
+import api from '../utils/api'
+import { useAuth } from '../context/AuthContext'
 
 function Dashboard() {
+  const { user } = useAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await api.get('dashboard/summary/');
+        setData(res.data);
+      } catch (err) {
+        console.error(err);
+        setError('Failed to load dashboard data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-forest-600">
+        <Loader2 className="animate-spin mb-4" size={32} />
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Page header */}
       <div className="page-header">
         <div>
           <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">AgriSmart AI · Prototype overview for your farm operations</p>
+          <p className="page-subtitle">Welcome back, {user?.full_name || user?.username}</p>
         </div>
-        <span className="badge-proto">Demo Data</span>
       </div>
+
       {/* Metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {METRICS.map((m) => {
-          const Icon = m.icon
-          return (
-            <div key={m.label} className={`metric-card border ${m.border}`}>
-              <div className={`w-10 h-10 rounded-xl ${m.bg} flex items-center justify-center mb-2`}>
-                <Icon size={20} className={m.color} />
-              </div>
-              <div className="text-2xl font-bold text-forest-900">{m.value}</div>
-              <div className="text-xs font-semibold text-forest-700">{m.label}</div>
-              <div className="text-xs text-forest-500">{m.sub}</div>
-              {m.demo && <span className="badge-proto mt-1 self-start">Demo</span>}
-            </div>
-          )
-        })}
+        {/* Disease Scans */}
+        <div className="metric-card border border-forest-200">
+          <div className="w-10 h-10 rounded-xl bg-forest-50 flex items-center justify-center mb-2">
+            <ScanLine size={20} className="text-forest-600" />
+          </div>
+          <div className="text-2xl font-bold text-forest-900">
+            {data.total_disease_scans > 0 ? data.total_disease_scans : '-'}
+          </div>
+          <div className="text-xs font-semibold text-forest-700">Disease Scans</div>
+          <div className="text-xs text-forest-500">
+            {data.total_disease_scans > 0 
+              ? `${data.healthy_scans} healthy, ${data.diseased_scans} diseased` 
+              : 'Run your first disease scan'}
+          </div>
+        </div>
+
+        {/* Crop Recommendations */}
+        <div className="metric-card border border-emerald-200">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-2">
+            <Leaf size={20} className="text-emerald-600" />
+          </div>
+          <div className="text-2xl font-bold text-forest-900">
+            {data.total_crop_recommendations > 0 ? data.total_crop_recommendations : '-'}
+          </div>
+          <div className="text-xs font-semibold text-forest-700">Crop Recommendations</div>
+          <div className="text-xs text-forest-500">
+            {data.total_crop_recommendations > 0 
+              ? 'Assessments run' 
+              : 'No records yet'}
+          </div>
+        </div>
+
+        {/* Irrigation */}
+        <div className="metric-card border border-blue-200">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-2">
+            <Droplets size={20} className="text-blue-600" />
+          </div>
+          <div className="text-2xl font-bold text-forest-900">
+            {data.total_irrigation_assessments > 0 ? data.total_irrigation_assessments : '-'}
+          </div>
+          <div className="text-xs font-semibold text-forest-700">Irrigation Advice</div>
+          <div className="text-xs text-forest-500">
+            {data.total_irrigation_assessments > 0 
+              ? 'Assessments run' 
+              : 'No assessment available'}
+          </div>
+        </div>
+
+        {/* Sustainability Score */}
+        <div className="metric-card border border-harvest-200">
+          <div className="w-10 h-10 rounded-xl bg-harvest-50 flex items-center justify-center mb-2">
+            <Globe size={20} className="text-harvest-600" />
+          </div>
+          <div className="text-2xl font-bold text-forest-900">
+            {data.latest_sustainability_score !== null ? Math.round(data.latest_sustainability_score) : '-'}
+          </div>
+          <div className="text-xs font-semibold text-forest-700">Sustainability Score</div>
+          <div className="text-xs text-forest-500">
+            {data.latest_sustainability_score !== null 
+              ? '/ 100' 
+              : 'Complete your farm profile'}
+          </div>
+        </div>
       </div>
 
       {/* Advisory + Activity grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* Advisory panel */}
+        {/* FieldGuard Risk */}
         <div className="lg:col-span-2 agri-card space-y-4">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="font-bold text-lg text-forest-900">Today's Advisory</h2>
-            <div className="flex items-center gap-2">
-              <span className="badge-proto">Rule-based · Prototype</span>
-            </div>
+            <h2 className="font-bold text-lg text-forest-900">Latest FieldGuard Risk</h2>
           </div>
 
-          {ADVISORY.map((a, i) => (
-            <div key={i} className="p-4 rounded-xl border border-forest-100 bg-forest-50 space-y-2">
+          {data.latest_fieldguard_score !== null ? (
+            <div className="p-4 rounded-xl border border-forest-100 bg-forest-50 space-y-2">
               <div className="flex items-center gap-2">
-                <span className={a.priorityClass}>{a.priority}</span>
-                <span className="font-semibold text-forest-900 text-sm">{a.title}</span>
+                <span className={`badge px-2 py-1 text-xs font-bold rounded-full ${
+                  data.latest_fieldguard_score > 80 ? 'bg-green-100 text-green-800' :
+                  data.latest_fieldguard_score > 60 ? 'bg-yellow-100 text-yellow-800' :
+                  data.latest_fieldguard_score > 40 ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {data.latest_fieldguard_category}
+                </span>
+                <span className="font-semibold text-forest-900 text-sm">Score: {Math.round(data.latest_fieldguard_score)}/100</span>
               </div>
-              <div className="text-xs text-forest-600">
-                <strong>Why:</strong> {a.why}
+              <div className="text-xs text-forest-700 mt-2">
+                This is your most recent FieldGuard risk assessment. Check the FieldGuard tab to run a new one.
               </div>
-              <div className="text-xs text-forest-700">
-                <strong>Action:</strong> {a.action}
-              </div>
-              <NavLink
-                to={a.feature}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-forest-700 hover:text-forest-900 hover:underline"
-              >
-                → {a.featureLabel}
+            </div>
+          ) : (
+            <div className="p-4 rounded-xl border border-forest-100 bg-forest-50 text-center py-8">
+              <p className="text-forest-600 text-sm">No risk assessments available yet.</p>
+              <NavLink to="/fieldguard" className="mt-3 inline-block text-xs font-semibold text-harvest-600 hover:underline">
+                Run an Assessment →
               </NavLink>
             </div>
-          ))}
+          )}
         </div>
 
         {/* Recent Activity */}
         <div className="agri-card space-y-3">
           <h2 className="font-bold text-lg text-forest-900 mb-2">Recent Activity</h2>
-          {ACTIVITIES.map((a, i) => {
-            const Icon = a.icon
-            return (
-              <div key={i} className="flex items-start gap-3">
-                <div className={`w-8 h-8 rounded-lg ${a.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                  <Icon size={15} className={a.color} />
-                </div>
+          
+          {data.recent_activities && data.recent_activities.length > 0 ? (
+            data.recent_activities.map((a, i) => (
+              <div key={i} className="flex items-start gap-3 border-b border-forest-50 pb-2 last:border-0 last:pb-0">
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium text-forest-800 leading-snug">{a.text}</div>
-                  <div className="text-[10px] text-forest-500 mt-0.5">{a.time} · Demo data</div>
+                  <div className="text-xs font-medium text-forest-800 leading-snug">{a.title}</div>
+                  {a.description && <div className="text-[10px] text-forest-500 mt-0.5">{a.description}</div>}
+                  <div className="text-[10px] text-forest-400 mt-1">{new Date(a.created_at).toLocaleString()}</div>
                 </div>
               </div>
-            )
-          })}
-          <div className="pt-2 border-t border-forest-100 text-[10px] text-forest-400">
-            Activity log is prototype demo data. No real farm records are stored.
-          </div>
+            ))
+          ) : (
+            <div className="text-center py-6 text-forest-500 text-xs">
+              No recent activity.
+            </div>
+          )}
         </div>
 
       </div>
