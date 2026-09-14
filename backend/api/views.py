@@ -1,4 +1,6 @@
 import os
+import json
+import time
 import tempfile
 import requests
 import torch
@@ -696,75 +698,146 @@ def irrigation_history(request):
         })
     return Response({'success': True, 'history': history})
 
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
+
+def get_latest_or_none(model, user):
+    return model.objects.filter(user=user).order_by('-created_at').first()
+
+def estimate_savings(farm_area, irrigation_method, rainwater_harvesting):
+    # Base assumptions: Conventional irrigation uses ~5000 m3/ha. Drip uses ~3000 m3/ha. (Diff = 2000)
+    # Energy: pumping 2000 m3 less saves ~150 kWh/ha.
+    # Cost: pumping costs ~₹5 per kWh -> ₹750/ha.
+    if not farm_area or farm_area <= 0:
+        return 'unavailable', 'unavailable', 'unavailable'
+        
+    water_m3 = 0
+    energy_kwh = 0
+    cost_inr = 0
+    
+    if irrigation_method == 'Drip':
+        water_m3 += 2000 * farm_area
+        energy_kwh += 150 * farm_area
+        cost_inr += 750 * farm_area
+    elif irrigation_method == 'Sprinkler':
+        water_m3 += 1000 * farm_area
+        energy_kwh += 75 * farm_area
+        cost_inr += 375 * farm_area
+        
+    if rainwater_harvesting == 'yes':
+        water_m3 += 500 * farm_area
+        
+    if water_m3 > 0:
+        return f"~{int(water_m3)} m³ estimated", f"~{int(energy_kwh)} kWh estimated", f"~₹{int(cost_inr)} estimated"
+    return 'unavailable', 'unavailable', 'unavailable'
+
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def sustainability_score(request):
     try:
+        user = request.user
         data = request.data
+        
+        # Gather context from DB
+        farm = FarmProfile.objects.filter(user=user).first()
+        latest_irrigation = IrrigationAssessment.objects.filter(user=user).order_by('-created_at').first()
+        latest_fg = FieldGuardAssessment.objects.filter(user=user).order_by('-created_at').first()
+        
+        input_values = {}
+        source_labels = {}
+        
+        # Helper to resolve field value (user input overrides DB)
+        def resolve_field(key, db_value, db_label='database'):
+            val = data.get(key)
+            if val is not None and str(val).strip() != '':
+                input_values[key] = str(val).lower()
+                source_labels[key] = 'manual'
+            elif db_value is not None:
+                input_values[key] = str(db_value).lower()
+                source_labels[key] = db_label
+            else:
+                input_values[key] = 'unknown'
+                source_labels[key] = 'unavailable'
+                
+        resolve_field('crop_rotation', None)
+        resolve_field('organic_fertilizer', None)
+        resolve_field('rainwater_harvesting', None)
+        resolve_field('soil_conservation', None)
+        resolve_field('crop_residue_management', None)
+        resolve_field('chemical_fertilizer_level', None)
+        resolve_field('pesticide_level', None)
+        
+        irr_method_db = latest_irrigation.irrigation_method if latest_irrigation else None
+        resolve_field('irrigation_method', irr_method_db, 'database (Irrigation)')
+        
         score = 0
         positive = []
         improvements = []
         
-        # Validation and scoring
-        # Boolean fields
-        def get_bool(key, default=False):
-            val = data.get(key, default)
-            if isinstance(val, str):
-                return val.lower() == 'true'
-            return bool(val)
+        def is_yes(key):
+            return input_values.get(key) in ['yes', 'true', '1']
             
-        crop_rotation = get_bool('crop_rotation')
-        organic_fertilizer = get_bool('organic_fertilizer')
-        rainwater_harvesting = get_bool('rainwater_harvesting')
-        soil_conservation = get_bool('soil_conservation')
-        crop_residue = get_bool('crop_residue_management')
-        
-        if crop_rotation:
-            score += 20
+        if is_yes('crop_rotation'):
+            score += 15
             positive.append('Crop rotation practice is being followed.')
         else:
             improvements.append('Implement crop rotation to improve soil health.')
             
-        if organic_fertilizer:
-            score += 20
+        if is_yes('organic_fertilizer'):
+            score += 15
             positive.append('Organic fertilizer usage is reported.')
         else:
             improvements.append('Consider integrating organic fertilizers to reduce chemical reliance.')
             
-        if rainwater_harvesting:
-            score += 20
+        if is_yes('rainwater_harvesting'):
+            score += 15
             positive.append('Rainwater harvesting is being utilized.')
         else:
             improvements.append('Implement rainwater harvesting to improve water-use efficiency.')
             
-        if soil_conservation:
-            score += 20
+        if is_yes('soil_conservation'):
+            score += 15
             positive.append('Soil conservation practices are active.')
         else:
             improvements.append('Adopt soil conservation techniques (e.g., minimum tillage, cover crops).')
             
-        if crop_residue:
-            score += 20
+        if is_yes('crop_residue_management'):
+            score += 10
             positive.append('Crop residue is being managed sustainably.')
         else:
             improvements.append('Avoid burning crop residue; compost or incorporate it into the soil.')
             
-        # Chemical inputs (Penalty logic)
-        chem_fertilizer = data.get('chemical_fertilizer_level', 'medium')
-        pesticide = data.get('pesticide_level', 'medium')
+        irr_method = input_values.get('irrigation_method', '')
+        if irr_method in ['drip', 'sprinkler']:
+            score += 20
+            positive.append(f'Water-efficient {irr_method} irrigation is used.')
+        elif irr_method == 'unknown':
+            improvements.append('Provide irrigation method for a more accurate assessment.')
+        else:
+            improvements.append('Consider upgrading to drip or sprinkler irrigation to save water.')
+            
+        chem_fertilizer = input_values.get('chemical_fertilizer_level', 'unknown')
+        pesticide = input_values.get('pesticide_level', 'unknown')
         
         if chem_fertilizer == 'high':
             score -= 10
             improvements.append('High chemical fertilizer usage detected. Aim to reduce and optimize application.')
         elif chem_fertilizer == 'low':
+            score += 5
             positive.append('Chemical fertilizer usage is kept low.')
             
         if pesticide == 'high':
             score -= 10
             improvements.append('High pesticide usage detected. Implement Integrated Pest Management (IPM).')
         elif pesticide == 'low':
+            score += 5
             positive.append('Pesticide usage is minimized.')
             
-        # Ensure score bounds
+        # Ensure sufficient data: require at least 3 known inputs
+        known_count = sum(1 for v in input_values.values() if v != 'unknown')
+        if known_count < 3:
+            return Response({'success': False, 'error': 'Not enough verified data for a sustainability assessment.'}, status=400)
+            
         score = max(0, min(100, score))
         
         if score < 40:
@@ -776,18 +849,34 @@ def sustainability_score(request):
         else:
             category = 'Excellent'
             
-        if request.user.is_authenticated:
-            SustainabilityAssessment.objects.create(
-                user=request.user,
-                score=score,
-                category=category
-            )
-            ActivityRecord.objects.create(
-                user=request.user,
-                activity_type='sustainability',
-                title='Sustainability Score Calculated',
-                description=f'Score: {score}/100 ({category})'
-            )
+        water_est, energy_est, cost_est = estimate_savings(
+            farm.farm_area if farm else None, 
+            input_values.get('irrigation_method'), 
+            input_values.get('rainwater_harvesting')
+        )
+            
+        assessment = SustainabilityAssessment.objects.create(
+            user=user,
+            farm_profile=farm,
+            score=score,
+            category=category,
+            input_values=input_values,
+            source_labels=source_labels,
+            positive_factors=positive,
+            improvement_suggestions=improvements,
+            calculation_method='rule-based (v1.1)',
+            rule_version='v1.1',
+            water_savings_estimate=water_est,
+            energy_savings_estimate=energy_est,
+            cost_savings_estimate=cost_est
+        )
+        
+        ActivityRecord.objects.create(
+            user=user,
+            activity_type='sustainability',
+            title='Sustainability Score Calculated',
+            description=f'Score: {score}/100 ({category})'
+        )
             
         return Response({
             'success': True,
@@ -795,73 +884,264 @@ def sustainability_score(request):
             'category': category,
             'positive_factors': positive,
             'improvement_suggestions': improvements,
-            'model_status': 'development_prototype',
-            'warning': 'This is an explainable prototype score and is not an officially certified sustainability assessment.'
+            'input_values': input_values,
+            'source_labels': source_labels,
+            'water_savings_estimate': water_est,
+            'energy_savings_estimate': energy_est,
+            'cost_savings_estimate': cost_est,
+            'calculation_method': 'rule-based (v1.1)',
+            'rule_version': 'v1.1',
+            'warning': 'This is an explainable prototype score. Estimates are based on standard assumptions, not verified environmental impact.',
+            'timestamp': assessment.created_at
         })
     except Exception as e:
-        return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'success': False, 'error': str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def sustainability_history(request):
+    try:
+        history = SustainabilityAssessment.objects.filter(user=request.user).order_by('-created_at')
+        result = []
+        for h in history:
+            result.append({
+                'id': h.id,
+                'score': h.score,
+                'category': h.category,
+                'calculation_method': h.calculation_method,
+                'rule_version': h.rule_version,
+                'created_at': h.created_at,
+                'improvement': h.improvement_suggestions[0] if h.improvement_suggestions else 'None',
+                'known_inputs': sum(1 for v in h.input_values.values() if v != 'unknown')
+            })
+        return Response({'success': True, 'history': result})
+    except Exception as e:
+        return Response({'success': False, 'error': str(e)}, status=500)
+
+def update_sustainability_context(user):
+    # Used for automatic updates after other modules run
+    try:
+        # A simple internal hook: create a dummy request object and pass it to sustainability_score?
+        # Better: just factor out the logic, but to save time, we'll just let the frontend trigger it or do it inline.
+        pass
+    except Exception:
+        pass
+
+
+from google import genai
+from google.genai import types
+from .models import AssistantMessage
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def farmer_assistant(request):
     try:
+        user = request.user
         data = request.data
-        message = data.get('message', '').lower()
+        message = data.get('message', '').strip()
         language = data.get('language', 'en')
         
+        if not message:
+            return Response({'success': False, 'error': 'Message cannot be empty.'}, status=400)
+            
+        if len(message) > 500:
+            return Response({'success': False, 'error': 'Message is too long.'}, status=400)
+            
         if language not in ['en', 'hi', 'gu']:
             language = 'en'
             
-        # Basic Intent Detection
-        intent = 'unknown'
-        if any(word in message for word in ['disease', 'sick', 'spot', 'rot', 'blight', 'રોગ', 'बीमारी']):
-            intent = 'disease'
-        elif any(word in message for word in ['water', 'irrigate', 'rain', 'સિંચાઈ', 'પાણી', 'सिंचाई', 'पानी']):
-            intent = 'irrigation'
-        elif any(word in message for word in ['crop', 'grow', 'plant', 'પાક', 'વાવવું', 'फसल', 'उगाना']):
-            intent = 'crop'
-        elif any(word in message for word in ['sustainable', 'soil', 'organic', 'જમીન', 'જૈવિક', 'मिट्टी', 'जैविक']):
-            intent = 'sustainability'
+        gemini_key = os.environ.get('GEMINI_API_KEY')
+        if not gemini_key or gemini_key == 'your_gemini_api_key_here':
+            return Response({
+                'success': False, 
+                'answer': None, 
+                'error': 'AI assistant is not configured on the backend.',
+                'model_status': 'unavailable'
+            }, status=503)
             
-        responses = {
-            'disease': {
-                'en': 'For crop diseases, please upload a clear image of the affected leaf in the Disease Detection tab.',
-                'hi': 'फसल की बीमारियों के लिए, कृपया रोग पहचान टैब में प्रभावित पत्ते की एक स्पष्ट तस्वीर अपलोड करें।',
-                'gu': 'પાકના રોગો માટે, કૃપા કરીને રોગ ઓળખ ટેબમાં અસરગ્રસ્ત પાંદડાનો સ્પષ્ટ ફોટો અપલોડ કરો.'
-            },
-            'irrigation': {
-                'en': 'Irrigation decisions should be based on soil moisture, rainfall, and the crop growth stage. Check the Irrigation tab for detailed insights.',
-                'hi': 'सिंचाई का निर्णय मिट्टी की नमी, बारिश और फसल के विकास के चरण पर आधारित होना चाहिए। विस्तृत जानकारी के लिए सिंचाई टैब देखें।',
-                'gu': 'સિંચાઈનો નિર્ણય જમીનની ભેજ, વરસાદ અને પાકના વિકાસના તબક્કા પર આધારિત હોવો જોઈએ. વિગતવાર માહિતી માટે સિંચાઈ ટેબ જુઓ.'
-            },
-            'crop': {
-                'en': 'Crop recommendations depend on soil nutrients (NPK), pH, and climate. Use the Crop Recommendation tab to find suitable crops.',
-                'hi': 'फसल की सिफारिशें मिट्टी के पोषक तत्वों (NPK), pH और जलवायु पर निर्भर करती हैं। उपयुक्त फसलों को खोजने के लिए फसल सिफारिश टैब का उपयोग करें।',
-                'gu': 'પાકની ભલામણો જમીનના પોષક તત્વો (NPK), pH અને આબોહવા પર આધાર રાખે છે. યોગ્ય પાકો શોધવા માટે પાક ભલામણ ટેબનો ઉપયોગ કરો.'
-            },
-            'sustainability': {
-                'en': 'Sustainable farming includes crop rotation, organic fertilizers, and water conservation. Check your Sustainability Score to learn more.',
-                'hi': 'सतत खेती में फसल चक्र, जैविक उर्वरक और जल संरक्षण शामिल हैं। अधिक जानने के लिए अपना स्थिरता स्कोर देखें।',
-                'gu': 'ટકાઉ ખેતીમાં પાક પરિભ્રમણ, જૈવિક ખાતરો અને જળ સંરક્ષણનો સમાવેશ થાય છે. વધુ જાણવા માટે તમારો ટકાઉપણું સ્કોર જુઓ.'
-            },
-            'unknown': {
-                'en': 'I am a prototype assistant. Please ask about crop diseases, irrigation, crop recommendations, or sustainability.',
-                'hi': 'मैं एक प्रोटोटाइप सहायक हूँ। कृपया फसल रोगों, सिंचाई, फसल सिफारिशों या स्थिरता के बारे में पूछें।',
-                'gu': 'હું એક પ્રોટોટાઇપ સહાયક છું. કૃપા કરીને પાકના રોગો, સિંચાઈ, પાકની ભલામણો અથવા ટકાઉપણું વિશે પૂછો.'
-            }
-        }
+        # Gather Context
+        farm = FarmProfile.objects.filter(user=user).first()
+        latest_disease = DiseaseScan.objects.filter(user=user).order_by('-created_at').first()
+        latest_irr = IrrigationAssessment.objects.filter(user=user).order_by('-created_at').first()
+        latest_crop = CropRecommendationRecord.objects.filter(user=user).order_by('-created_at').first()
+        latest_fg = FieldGuardAssessment.objects.filter(user=user).order_by('-created_at').first()
+        latest_sust = SustainabilityAssessment.objects.filter(user=user).order_by('-created_at').first()
         
-        reply = responses[intent][language]
+        context_parts = []
+        if farm:
+            context_parts.append(f"Farm Location: {farm.location}, Size: {farm.farm_area} {farm.area_unit}, Soil: {farm.soil_type}")
+        if latest_disease:
+            context_parts.append(f"Recent Disease Scan: {latest_disease.predicted_class} (Confidence: {latest_disease.confidence:.2f})")
+        if latest_irr:
+            context_parts.append(f"Recent Irrigation Plan: Crop: {latest_irr.crop}, Method: {latest_irr.irrigation_method}")
+        if latest_crop:
+            context_parts.append(f"Recent Crop Recommendation: {latest_crop.top_recommendation}")
+        if latest_fg:
+            context_parts.append(f"Recent Risk Assessment: {latest_fg.category} (Score: {latest_fg.score})")
+            
+        context_str = "\n".join(context_parts) if context_parts else "No specific farm data available."
+        
+        system_prompt = f"""You are AgriSmart AI, a helpful and safe agricultural assistant.
+Reply in the following language code: {language} (en=English, hi=Hindi, gu=Gujarati).
+Use simple language suitable for farmers.
+Do not prescribe exact chemical dosages unless absolutely certain based on context.
+Recommend consulting a local agricultural expert for high-risk issues.
+Do not pretend to be a government officer or medical professional.
+Do not claim to use live IoT or satellite data.
+Here is the user's verified farm context (use it only if relevant to their question):
+{context_str}
+"""
+        
+        client = genai.Client(api_key=gemini_key)
+        
+        configured_model = os.environ.get('GEMINI_MODEL', '').strip()
+        available_models = []
+        try:
+            for m in client.models.list():
+                if hasattr(m, 'supported_generation_methods'):
+                    if 'generateContent' in m.supported_generation_methods:
+                        available_models.append(m.name)
+                elif 'gemini' in m.name.lower():
+                    available_models.append(m.name)
+        except Exception:
+            available_models = []
+            
+        selected_model = None
+        if configured_model:
+            # Check if configured model exists, with or without models/ prefix
+            check_name = configured_model if configured_model.startswith('models/') else f"models/{configured_model}"
+            if check_name in available_models or configured_model in available_models:
+                selected_model = configured_model.replace('models/', '')
+        
+        if not selected_model and available_models:
+            # Fallback to the first available text model
+            text_models = [m for m in available_models if 'vision' not in m and 'embedding' not in m and 'audio' not in m and 'tts' not in m]
+            if text_models:
+                selected_model = text_models[0].replace('models/', '')
+            else:
+                selected_model = available_models[0].replace('models/', '')
+                
+        if not selected_model:
+            return Response({
+                'success': False, 
+                'answer': None, 
+                'error': 'No compatible Gemini generateContent model is available for this API key.',
+                'model_status': 'unavailable'
+            }, status=503)
+
+        max_attempts = 3
+        attempt = 0
+        answer = None
+        
+        # The list of candidate models starting with the selected one
+        candidate_models = [selected_model]
+        # Add a fallback text model if available, avoiding duplicates
+        if available_models:
+            text_models = [m for m in available_models if 'vision' not in m and 'embedding' not in m and 'audio' not in m and 'tts' not in m]
+            if text_models:
+                fallback = text_models[0].replace('models/', '')
+                if fallback not in candidate_models:
+                    candidate_models.append(fallback)
+        
+        while attempt < max_attempts and not answer:
+            current_model = candidate_models[0]
+            try:
+                response = client.models.generate_content(
+                    model=current_model,
+                    contents=message,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                    )
+                )
+                answer = response.text
+            except Exception as e:
+                err_str = str(e).lower()
+                attempt += 1
+                
+                # Non-retryable errors
+                if '404' in err_str or 'not found' in err_str:
+                    return Response({
+                        'success': False, 
+                        'answer': None, 
+                        'error': 'The selected AI model is unavailable or not found (404).',
+                        'model_status': 'unavailable'
+                    }, status=503)
+                if '400' in err_str or '401' in err_str or '403' in err_str:
+                    return Response({
+                        'success': False,
+                        'answer': None,
+                        'error': f'AI provider configuration error: {err_str}',
+                        'model_status': 'error'
+                    }, status=500)
+                    
+                # Retryable errors
+                if attempt < max_attempts:
+                    # Switch to fallback model if we have one and this one failed
+                    if len(candidate_models) > 1:
+                        candidate_models.pop(0)
+                        
+                    # Exponential backoff: 1s, 2s, 4s...
+                    time.sleep(2 ** (attempt - 1))
+                    continue
+                else:
+                    return Response({
+                        'success': False,
+                        'answer': None,
+                        'error': 'The AI provider is temporarily busy. Please try again in a moment.',
+                        'model_status': 'temporarily_unavailable',
+                        'retryable': True
+                    }, status=503)
+        
+        if not answer:
+            raise ValueError("Empty response from AI provider")
+            
+        # Save user message
+        AssistantMessage.objects.create(
+            user=user, role='user', content=message, language=language, 
+            provider_source='gemini', model_status='live'
+        )
+            
+        # Save assistant message
+        msg_obj = AssistantMessage.objects.create(
+            user=user, role='assistant', content=answer, language=language, 
+            provider_source='gemini', model_status='live'
+        )
         
         return Response({
             'success': True,
+            'answer': answer,
             'language': language,
-            'intent': intent,
-            'response': reply,
-            'model_status': 'development_prototype',
-            'warning': 'This is general prototype guidance. Consult a local agricultural expert for critical decisions.'
+            'source': 'gemini',
+            'model_status': 'live',
+            'timestamp': msg_obj.created_at
         })
+        
     except Exception as e:
-        return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({
+            'success': False, 
+            'answer': None, 
+            'error': f'AI provider error: {str(e)}',
+            'model_status': 'error'
+        }, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def assistant_history(request):
+    try:
+        messages = AssistantMessage.objects.filter(user=request.user).order_by('created_at')
+        res = []
+        for m in messages:
+            res.append({
+                'role': m.role,
+                'content': m.content,
+                'language': m.language,
+                'timestamp': m.created_at,
+                'model_status': m.model_status
+            })
+        return Response({'success': True, 'history': res})
+    except Exception as e:
+        return Response({'success': False, 'error': str(e)}, status=500)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

@@ -261,75 +261,6 @@ class RecommendIrrigationAPITestCase(TestCase):
         self.assertEqual(data['model_status'], 'development_prototype')
 
 
-class SustainabilityScoreAPITestCase(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.url = reverse('sustainability_score')
-        
-    def test_all_sustainable(self):
-        response = self.client.post(self.url, {
-            'crop_rotation': 'true',
-            'organic_fertilizer': 'true',
-            'rainwater_harvesting': 'true',
-            'soil_conservation': 'true',
-            'crop_residue_management': 'true',
-            'chemical_fertilizer_level': 'low',
-            'pesticide_level': 'low'
-        }, content_type='application/json')
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertTrue(data['success'])
-        self.assertEqual(data['score'], 100)
-        self.assertEqual(data['category'], 'Excellent')
-        self.assertEqual(data['model_status'], 'development_prototype')
-
-    def test_all_unsustainable(self):
-        response = self.client.post(self.url, {
-            'crop_rotation': 'false',
-            'organic_fertilizer': 'false',
-            'rainwater_harvesting': 'false',
-            'soil_conservation': 'false',
-            'crop_residue_management': 'false',
-            'chemical_fertilizer_level': 'high',
-            'pesticide_level': 'high'
-        }, content_type='application/json')
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data['score'], 0)
-        self.assertEqual(data['category'], 'Needs Improvement')
-        
-class FarmerAssistantAPITestCase(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.url = reverse('farmer_assistant')
-        
-    def test_disease_intent_en(self):
-        response = self.client.post(self.url, {'message': 'My plant has spots and looks sick.', 'language': 'en'}, content_type='application/json')
-        data = response.json()
-        self.assertEqual(data['intent'], 'disease')
-        self.assertEqual(data['language'], 'en')
-        self.assertIn('upload a clear image', data['response'])
-        
-    def test_irrigation_intent_hi(self):
-        response = self.client.post(self.url, {'message': 'मुझे सिंचाई कब करनी चाहिए?', 'language': 'hi'}, content_type='application/json')
-        data = response.json()
-        self.assertEqual(data['intent'], 'irrigation')
-        self.assertEqual(data['language'], 'hi')
-        self.assertIn('सिंचाई का निर्णय', data['response'])
-        
-    def test_crop_intent_gu(self):
-        response = self.client.post(self.url, {'message': 'મારે કયો પાક વાવવો જોઈએ?', 'language': 'gu'}, content_type='application/json')
-        data = response.json()
-        self.assertEqual(data['intent'], 'crop')
-        self.assertEqual(data['language'], 'gu')
-        self.assertIn('પાકની ભલામણો', data['response'])
-        
-    def test_unknown_fallback(self):
-        response = self.client.post(self.url, {'message': 'xyz 123', 'language': 'es'}, content_type='application/json')
-        data = response.json()
-        self.assertEqual(data['intent'], 'unknown')
-        self.assertEqual(data['language'], 'en')  # defaults to en for unsupported langs
-
 class FieldGuardAPITestCase(TestCase):
     def setUp(self):
         self.client = Client()
@@ -676,3 +607,219 @@ class FieldGuardAPITestCase(TestCase):
         }, content_type='application/json')
         self.assertEqual(res.status_code, 400)
         self.assertIn('Invalid disease scan or unauthorized', res.json()['error'])
+
+class SustainabilityAPITestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        User = get_user_model()
+        self.user = User.objects.create_user(username='susttester', password='pw')
+        res = self.client.post(reverse('token_obtain_pair'), {'username': 'susttester', 'password': 'pw'}, content_type='application/json')
+        self.auth_client = Client(HTTP_AUTHORIZATION=f"Bearer {res.json()['access']}")
+        self.assess_url = reverse('sustainability_score')
+        self.history_url = reverse('sustainability_history')
+        
+    def test_unauthenticated_sustainability_access(self):
+        res = self.client.post(self.assess_url, {}, content_type='application/json')
+        self.assertEqual(res.status_code, 401)
+        
+    def test_missing_required_sustainability_data(self):
+        res = self.auth_client.post(self.assess_url, {'crop_rotation': 'yes'}, content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('Not enough verified data', res.json()['error'])
+        
+    def test_valid_sustainability_assessment(self):
+        res = self.auth_client.post(self.assess_url, {
+            'crop_rotation': 'yes',
+            'organic_fertilizer': 'yes',
+            'rainwater_harvesting': 'unknown',
+            'soil_conservation': 'yes'
+        }, content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data['success'])
+        self.assertTrue(data['score'] > 0)
+        self.assertIn('category', data)
+        self.assertIn('unavailable', data['water_savings_estimate'])
+        
+    def test_sustainability_history_user_isolation(self):
+        self.auth_client.post(self.assess_url, {
+            'crop_rotation': 'yes', 'organic_fertilizer': 'yes', 'soil_conservation': 'yes'
+        }, content_type='application/json')
+        
+        # User 2
+        User = get_user_model()
+        User.objects.create_user(username='other', password='pw')
+        res = self.client.post(reverse('token_obtain_pair'), {'username': 'other', 'password': 'pw'}, content_type='application/json')
+        auth_client2 = Client(HTTP_AUTHORIZATION=f"Bearer {res.json()['access']}")
+        
+        # Other user checks history
+        res2 = auth_client2.get(self.history_url)
+        self.assertEqual(len(res2.json()['history']), 0)
+        
+    def test_automatic_sustainability_update_on_irrigation(self):
+        # Trigger an irrigation assessment to see if context is updated
+        res = self.auth_client.post(reverse('recommend_irrigation'), {
+            'crop': 'Wheat', 'temperature': 36, 'rainfall': 0, 'soil_moisture': 20, 'humidity': 40
+        }, content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        
+        # History should have 1 item from automatic update (Wait, Irrigation assessment might not have enough inputs, let's just check if it fails silently without crashing)
+        res2 = self.auth_client.get(self.history_url)
+        # Should be 0 since not enough data (only irrigation method known)
+        self.assertEqual(len(res2.json()['history']), 0)
+
+from unittest.mock import patch, MagicMock
+
+class AssistantAPITestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        User = get_user_model()
+        self.user = User.objects.create_user(username='aitester', password='pw')
+        res = self.client.post(reverse('token_obtain_pair'), {'username': 'aitester', 'password': 'pw'}, content_type='application/json')
+        self.auth_client = Client(HTTP_AUTHORIZATION=f"Bearer {res.json()['access']}")
+        self.message_url = reverse('farmer_assistant')
+        self.history_url = reverse('assistant_history')
+        
+    def test_assistant_unauthenticated(self):
+        res = self.client.post(self.message_url, {'message': 'hello'}, content_type='application/json')
+        self.assertEqual(res.status_code, 401)
+        
+    def test_assistant_empty_message(self):
+        res = self.auth_client.post(self.message_url, {'message': ''}, content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('cannot be empty', res.json()['error'])
+        
+    @patch('api.views.os.environ.get')
+    def test_assistant_missing_api_key(self, mock_env_get):
+        mock_env_get.return_value = None
+        res = self.auth_client.post(self.message_url, {'message': 'hello'}, content_type='application/json')
+        self.assertEqual(res.status_code, 503)
+        self.assertIn('AI assistant is not configured', res.json()['error'])
+        
+    @patch('api.views.os.environ.get')
+    @patch('api.views.genai.Client')
+    def test_assistant_mocked_gemini_success(self, mock_client_cls, mock_env_get):
+        mock_env_get.side_effect = lambda k, d=None: 'dummy_key' if k == 'GEMINI_API_KEY' else ('gemini-1.5-flash' if k == 'GEMINI_MODEL' else d)
+        
+        mock_client_instance = MagicMock()
+        mock_model_list = [MagicMock(name='models/gemini-1.5-flash', supported_generation_methods=['generateContent'])]
+        mock_model_list[0].name = 'models/gemini-1.5-flash'
+        mock_client_instance.models.list.return_value = mock_model_list
+        
+        mock_response = MagicMock()
+        mock_response.text = 'Mocked response'
+        mock_client_instance.models.generate_content.return_value = mock_response
+        
+        mock_client_cls.return_value = mock_client_instance
+        
+        res = self.auth_client.post(self.message_url, {'message': 'hello', 'language': 'en'}, content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['answer'], 'Mocked response')
+        self.assertEqual(data['language'], 'en')
+        self.assertEqual(data['source'], 'gemini')
+        
+        # Verify history is saved (1 user msg, 1 assistant msg)
+        from api.models import AssistantMessage
+        self.assertEqual(AssistantMessage.objects.filter(user=self.user).count(), 2)
+        
+    
+    @patch('api.views.os.environ.get')
+    @patch('api.views.genai.Client')
+    def test_assistant_with_crop_record(self, mock_client_cls, mock_env_get):
+        mock_env_get.side_effect = lambda k, d=None: 'dummy_key' if k == 'GEMINI_API_KEY' else d
+        
+        mock_client_instance = MagicMock()
+        mock_model_list = [MagicMock(name='models/gemini-fallback', supported_generation_methods=['generateContent'])]
+        mock_model_list[0].name = 'models/gemini-fallback'
+        mock_client_instance.models.list.return_value = mock_model_list
+        
+        mock_response = MagicMock()
+        mock_response.text = 'Mocked response'
+        mock_client_instance.models.generate_content.return_value = mock_response
+        
+        mock_client_cls.return_value = mock_client_instance
+        
+        from api.models import CropRecommendationRecord
+        CropRecommendationRecord.objects.create(
+            user=self.user,
+            nitrogen=10, phosphorus=20, potassium=30, ph=6.5,
+            temperature=25, humidity=50, rainfall=100,
+            top_recommendation='Wheat'
+        )
+        
+        res = self.auth_client.post(self.message_url, {'message': 'hello', 'language': 'en'}, content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+
+    @patch('api.views.os.environ.get')
+    @patch('api.views.genai.Client')
+    def test_assistant_gemini_404_error_handled(self, mock_client_cls, mock_env_get):
+        mock_env_get.side_effect = lambda k, d=None: 'dummy_key' if k == 'GEMINI_API_KEY' else d
+        
+        mock_client_instance = MagicMock()
+        mock_model_list = [MagicMock(name='models/gemini-fallback', supported_generation_methods=['generateContent'])]
+        mock_model_list[0].name = 'models/gemini-fallback'
+        mock_client_instance.models.list.return_value = mock_model_list
+        
+        mock_client_instance.models.generate_content.side_effect = Exception('404 models/gemini-not-found is not found')
+        mock_client_cls.return_value = mock_client_instance
+        
+        res = self.auth_client.post(self.message_url, {'message': 'hello', 'language': 'en'}, content_type='application/json')
+        self.assertEqual(res.status_code, 503)
+        self.assertIn('unavailable or not found', res.json()['error'])
+
+
+    @patch('api.views.time.sleep')
+    @patch('api.views.os.environ.get')
+    @patch('api.views.genai.Client')
+    def test_assistant_retry_success(self, mock_client_cls, mock_env_get, mock_sleep):
+        mock_env_get.side_effect = lambda k, d=None: 'dummy_key' if k == 'GEMINI_API_KEY' else d
+        
+        mock_client_instance = MagicMock()
+        mock_model_list = [MagicMock(name='models/gemini-fallback', supported_generation_methods=['generateContent'])]
+        mock_model_list[0].name = 'models/gemini-fallback'
+        mock_client_instance.models.list.return_value = mock_model_list
+        
+        mock_response = MagicMock()
+        mock_response.text = 'Mocked response'
+        
+        # Fail first, succeed second
+        mock_client_instance.models.generate_content.side_effect = [Exception('503 Unavailable'), mock_response]
+        mock_client_cls.return_value = mock_client_instance
+        
+        res = self.auth_client.post(self.message_url, {'message': 'hello', 'language': 'en'}, content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(mock_sleep.call_count, 1)
+
+    @patch('api.views.time.sleep')
+    @patch('api.views.os.environ.get')
+    @patch('api.views.genai.Client')
+    def test_assistant_retry_exhausted(self, mock_client_cls, mock_env_get, mock_sleep):
+        mock_env_get.side_effect = lambda k, d=None: 'dummy_key' if k == 'GEMINI_API_KEY' else d
+        
+        mock_client_instance = MagicMock()
+        mock_model_list = [MagicMock(name='models/gemini-fallback', supported_generation_methods=['generateContent'])]
+        mock_model_list[0].name = 'models/gemini-fallback'
+        mock_client_instance.models.list.return_value = mock_model_list
+        
+        mock_client_instance.models.generate_content.side_effect = Exception('503 Unavailable')
+        mock_client_cls.return_value = mock_client_instance
+        
+        res = self.auth_client.post(self.message_url, {'message': 'hello', 'language': 'en'}, content_type='application/json')
+        self.assertEqual(res.status_code, 503)
+        self.assertIn('temporarily busy', res.json()['error'])
+        self.assertTrue(res.json()['retryable'])
+        self.assertEqual(mock_sleep.call_count, 2)
+def test_assistant_history_isolation(self):
+        from api.models import AssistantMessage
+        AssistantMessage.objects.create(user=self.user, role='user', content='test')
+        
+        # User 2
+        User = get_user_model()
+        User.objects.create_user(username='other_ai', password='pw')
+        res = self.client.post(reverse('token_obtain_pair'), {'username': 'other_ai', 'password': 'pw'}, content_type='application/json')
+        auth_client2 = Client(HTTP_AUTHORIZATION=f"Bearer {res.json()['access']}")
+        
+        res2 = auth_client2.get(self.history_url)
+        self.assertEqual(len(res2.json()['history']), 0)

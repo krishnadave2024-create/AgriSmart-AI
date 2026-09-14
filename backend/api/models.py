@@ -102,8 +102,18 @@ class FieldGuardAssessment(models.Model):
 
 class SustainabilityAssessment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sustainability_assessments')
+    farm_profile = models.ForeignKey(FarmProfile, on_delete=models.SET_NULL, null=True, blank=True)
     score = models.FloatField()
     category = models.CharField(max_length=50)
+    input_values = models.JSONField(default=dict)
+    source_labels = models.JSONField(default=dict)
+    positive_factors = models.JSONField(default=list)
+    improvement_suggestions = models.JSONField(default=list)
+    calculation_method = models.CharField(max_length=100, default='rule-based')
+    rule_version = models.CharField(max_length=50, default='v1.0')
+    water_savings_estimate = models.CharField(max_length=100, default='unavailable')
+    energy_savings_estimate = models.CharField(max_length=100, default='unavailable')
+    cost_savings_estimate = models.CharField(max_length=100, default='unavailable')
     created_at = models.DateTimeField(auto_now_add=True)
 
 class ActivityRecord(models.Model):
@@ -115,3 +125,15 @@ class ActivityRecord(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+class AssistantMessage(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assistant_messages')
+    role = models.CharField(max_length=20)
+    content = models.TextField()
+    language = models.CharField(max_length=10, default='en')
+    provider_source = models.CharField(max_length=50, default='system')
+    model_status = models.CharField(max_length=50, default='live')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']

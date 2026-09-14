@@ -111,10 +111,10 @@ function Dashboard() {
             {data.latest_sustainability_score !== null ? Math.round(data.latest_sustainability_score) : '-'}
           </div>
           <div className="text-xs font-semibold text-forest-700">Sustainability Score</div>
-          <div className="text-xs text-forest-500">
+          <div className="text-[10px] text-forest-500">
             {data.latest_sustainability_score !== null 
               ? '/ 100' 
-              : 'Complete your farm profile'}
+              : 'Sustainability assessment unavailable'}
           </div>
         </div>
       </div>

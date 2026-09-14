@@ -142,6 +142,10 @@ AgriSmart AI is a production-quality agricultural decision-support platform desi
 ## Configuration
 Optional external services can be configured via environment variables. See `.env.example` for available variables.
 - `WEATHER_API_KEY`: (Optional) External weather service key for live mode.
+- `GEMINI_API_KEY`: (Required for AI) Your Google Gemini API key. Ensure this remains backend-only. To apply changes, restart Django: `Ctrl+C` then `python manage.py runserver`.
+- `GEMINI_MODEL`: (Optional) The specific Gemini model you wish to use. The backend validates the model against the models available to the API key. If left blank, it will automatically discover an available text generation model. 
+
+If `GEMINI_API_KEY` is missing or invalid, or if an unavailable model is configured, the Farmer Assistant will display an offline/unavailable state gracefully with a 503 error instead of failing or returning a traceback. No passwords, tokens, or private data are sent to the AI provider. The assistant's guidance is limited by safety prompts.
 
 ## Testing
 - Backend API tests: `cd backend` then `python manage.py test api`
