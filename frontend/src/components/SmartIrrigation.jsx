@@ -38,7 +38,7 @@ function SmartIrrigation() {
       <div className="page-header">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            <Droplets size={26} className="text-blue-600" /> Smart Irrigation & Weather
+            <Droplets size={26} className="text-blue-600" /> Smart Irrigation
           </h1>
           <p className="page-subtitle">Manual weather input · Rule-based prototype advisory</p>
         </div>

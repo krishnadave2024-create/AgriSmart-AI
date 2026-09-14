@@ -345,3 +345,124 @@ class FieldGuardAPITestCase(TestCase):
         data = response.json()
         self.assertTrue(data['success'])
         self.assertEqual(data['category'], 'Critical Risk')
+
+class AuthProfileAPITestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.register_url = reverse('register_user')
+        self.login_url = reverse('token_obtain_pair')
+        self.logout_url = reverse('logout_user')
+        self.me_url = reverse('current_user')
+        self.profile_url = reverse('user_profile')
+        self.farm_url = reverse('farm_profile')
+        
+        self.valid_user_data = {
+            'username': 'testuser',
+            'email': 'testuser@example.com',
+            'full_name': 'Test User',
+            'password': 'StrongPassword123!',
+            'confirm_password': 'StrongPassword123!'
+        }
+        
+    def test_successful_registration(self):
+        res = self.client.post(self.register_url, self.valid_user_data, content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        self.assertNotIn('password', res.json().get('user', {}))
+        
+    def test_duplicate_email_registration(self):
+        self.client.post(self.register_url, self.valid_user_data, content_type='application/json')
+        data2 = self.valid_user_data.copy()
+        data2['username'] = 'differentuser'
+        res = self.client.post(self.register_url, data2, content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('email', res.json().get('errors', {}))
+        
+    def test_duplicate_username_registration(self):
+        self.client.post(self.register_url, self.valid_user_data, content_type='application/json')
+        data2 = self.valid_user_data.copy()
+        data2['email'] = 'different@example.com'
+        res = self.client.post(self.register_url, data2, content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('username', res.json().get('errors', {}))
+        
+    def test_password_mismatch(self):
+        data = self.valid_user_data.copy()
+        data['confirm_password'] = 'Mismatch123!'
+        res = self.client.post(self.register_url, data, content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        
+    def test_successful_login(self):
+        self.client.post(self.register_url, self.valid_user_data, content_type='application/json')
+        res = self.client.post(self.login_url, {
+            'username': 'testuser',
+            'password': 'StrongPassword123!'
+        }, content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('access', res.json())
+        self.assertIn('refresh', res.json())
+        
+    def test_invalid_login(self):
+        res = self.client.post(self.login_url, {
+            'username': 'testuser',
+            'password': 'WrongPassword!'
+        }, content_type='application/json')
+        self.assertEqual(res.status_code, 401)
+        
+    def get_auth_client(self):
+        self.client.post(self.register_url, self.valid_user_data, content_type='application/json')
+        res = self.client.post(self.login_url, {
+            'username': 'testuser',
+            'password': 'StrongPassword123!'
+        }, content_type='application/json')
+        token = res.json()['access']
+        refresh = res.json()['refresh']
+        auth_client = Client(HTTP_AUTHORIZATION=f'Bearer {token}')
+        return auth_client, refresh
+
+    def test_current_user_endpoint(self):
+        auth_client, _ = self.get_auth_client()
+        res = auth_client.get(self.me_url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()['user']['username'], 'testuser')
+        self.assertNotIn('password', res.json()['user'])
+        
+    def test_logout_behavior(self):
+        auth_client, refresh = self.get_auth_client()
+        res = auth_client.post(self.logout_url, {'refresh': refresh}, content_type='application/json')
+        self.assertEqual(res.status_code, 205)
+        # Attempt to logout again with blacklisted token
+        res2 = auth_client.post(self.logout_url, {'refresh': refresh}, content_type='application/json')
+        self.assertEqual(res2.status_code, 400)
+        
+    def test_unauthenticated_access_rejection(self):
+        res = self.client.get(self.profile_url)
+        self.assertEqual(res.status_code, 401)
+        
+    def test_profile_crud_and_isolation(self):
+        auth_client1, _ = self.get_auth_client()
+        
+        # User 2
+        user2_data = self.valid_user_data.copy()
+        user2_data['username'] = 'user2'
+        user2_data['email'] = 'user2@example.com'
+        self.client.post(self.register_url, user2_data, content_type='application/json')
+        res = self.client.post(self.login_url, {'username': 'user2', 'password': 'StrongPassword123!'}, content_type='application/json')
+        auth_client2 = Client(HTTP_AUTHORIZATION=f"Bearer {res.json()['access']}")
+        
+        # Update user 1 profile
+        auth_client1.put(self.profile_url, {'full_name': 'Updated Name', 'preferred_language': 'hi'}, content_type='application/json')
+        
+        # Fetch user 2 profile (should not be user 1's profile)
+        res = auth_client2.get(self.profile_url)
+        self.assertNotEqual(res.json()['profile']['full_name'], 'Updated Name')
+        
+    def test_farm_profile_crud(self):
+        auth_client, _ = self.get_auth_client()
+        res = auth_client.put(self.farm_url, {
+            'farm_name': 'My Farm',
+            'location': 'Gujarat',
+            'farm_area': 10.5
+        }, content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()['farm']['farm_name'], 'My Farm')
+

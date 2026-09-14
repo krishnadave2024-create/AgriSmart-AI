@@ -11,3 +11,5 @@ djangorestframework
 django-cors-headers
 datasets
 huggingface_hub
+djangorestframework-simplejwt
+python-dotenv

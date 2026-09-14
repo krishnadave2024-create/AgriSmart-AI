@@ -454,3 +454,92 @@ def fieldguard_assess(request):
         
     except Exception as e:
         return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# --- Authentication and Profiles ---
+
+from django.contrib.auth.models import User
+from .models import UserProfile, FarmProfile
+from .serializers import RegisterSerializer, UserProfileSerializer, FarmProfileSerializer
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_user(request):
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'success': True, 'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
+    return Response({'success': False, 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def user_profile(request):
+    try:
+        profile = request.user.profile
+    except UserProfile.DoesNotExist:
+        return Response({'success': False, 'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+    if request.method == 'GET':
+        serializer = UserProfileSerializer(profile)
+        return Response({'success': True, 'profile': serializer.data})
+        
+    elif request.method == 'PUT':
+        serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'success': True, 'profile': serializer.data})
+        return Response({'success': False, 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def farm_profile(request):
+    try:
+        farm = request.user.farm
+    except FarmProfile.DoesNotExist:
+        return Response({'success': False, 'error': 'Farm profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+    if request.method == 'GET':
+        serializer = FarmProfileSerializer(farm)
+        return Response({'success': True, 'farm': serializer.data})
+        
+    elif request.method == 'PUT':
+        serializer = FarmProfileSerializer(farm, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'success': True, 'farm': serializer.data})
+        return Response({'success': False, 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+from rest_framework_simplejwt.tokens import RefreshToken
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_user(request):
+    try:
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({'success': False, 'error': 'Refresh token is required to logout'}, status=status.HTTP_400_BAD_REQUEST)
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+        return Response({'success': True, 'message': 'Logged out successfully'}, status=status.HTTP_205_RESET_CONTENT)
+    except Exception as e:
+        return Response({'success': False, 'error': 'Invalid token or token already blacklisted'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def current_user(request):
+    user = request.user
+    profile = getattr(user, 'profile', None)
+    farm = getattr(user, 'farm', None)
+    
+    return Response({
+        'success': True,
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'full_name': profile.full_name if profile else '',
+            'preferred_language': profile.preferred_language if profile else 'en',
+            'has_farm_profile': farm is not None and bool(farm.farm_name)
+        }
+    })

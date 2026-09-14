@@ -14,7 +14,7 @@ function FieldGuard() {
     humidity: '',
     sustainability_score: ''
   })
-  
+
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
@@ -38,7 +38,7 @@ function FieldGuard() {
     setLoading(true)
     setError(null)
     setResult(null)
-    
+
     try {
       const response = await axios.post('http://localhost:8000/api/fieldguard/assess/', formData)
       if (response.data.success) {
@@ -71,14 +71,7 @@ function FieldGuard() {
           </h1>
           <p className="page-subtitle">Composite agricultural threat analysis</p>
         </div>
-        <span className="badge-proto">Explainable Prototype</span>
-      </div>
 
-      <div className="proto-banner">
-        <Info size={16} className="flex-shrink-0 mt-0.5" />
-        <span>
-          <strong>Explainable Prototype:</strong> FieldGuard is a prototype based on manually entered or available application data. It is not a substitute for local agricultural experts, laboratory diagnosis, or official agricultural advisories. No real-time sensors or IoT devices are connected.
-        </span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -87,20 +80,20 @@ function FieldGuard() {
           <h2 className="font-semibold text-forest-900 mb-4 flex items-center gap-2">
             <AlertTriangle size={18} /> Manual Assessment Inputs
           </h2>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
+
               <div className="input-group">
                 <label className="input-label">Crop Type</label>
                 <input type="text" name="crop" value={formData.crop} onChange={handleChange} className="input-field" placeholder="e.g. Wheat" />
               </div>
-              
+
               <div className="input-group">
                 <label className="input-label">Growth Stage</label>
                 <input type="text" name="growth_stage" value={formData.growth_stage} onChange={handleChange} className="input-field" placeholder="e.g. Vegetative" />
               </div>
-              
+
               <div className="input-group">
                 <label className="input-label flex justify-between">
                   <span>Temperature (°C)</span>
@@ -113,7 +106,7 @@ function FieldGuard() {
                   <input type="number" step="0.1" name="temperature" value={formData.temperature} onChange={handleChange} className="input-field pl-9" placeholder="25.0" />
                 </div>
               </div>
-              
+
               <div className="input-group">
                 <label className="input-label flex justify-between">
                   <span>Humidity (%)</span>
@@ -126,7 +119,7 @@ function FieldGuard() {
                   <input type="number" step="0.1" name="humidity" value={formData.humidity} onChange={handleChange} className="input-field pl-9" placeholder="60" />
                 </div>
               </div>
-              
+
               <div className="input-group">
                 <label className="input-label flex justify-between">
                   <span>Rainfall (mm)</span>
@@ -139,7 +132,7 @@ function FieldGuard() {
                   <input type="number" step="0.1" name="rainfall" value={formData.rainfall} onChange={handleChange} className="input-field pl-9" placeholder="10" />
                 </div>
               </div>
-              
+
               <div className="input-group">
                 <label className="input-label flex justify-between">
                   <span>Soil Moisture (%)</span>
@@ -152,12 +145,12 @@ function FieldGuard() {
                   <input type="number" step="0.1" name="soil_moisture" value={formData.soil_moisture} onChange={handleChange} className="input-field pl-9" placeholder="45" />
                 </div>
               </div>
-              
+
               <div className="input-group">
                 <label className="input-label">Disease Label (if any)</label>
                 <input type="text" name="disease_label" value={formData.disease_label} onChange={handleChange} className="input-field" placeholder="e.g. Rust" />
               </div>
-              
+
               <div className="input-group">
                 <label className="input-label flex justify-between">
                   <span>Disease Confidence (0-1)</span>
@@ -165,7 +158,7 @@ function FieldGuard() {
                 </label>
                 <input type="number" step="0.01" max="1" min="0" name="disease_confidence" value={formData.disease_confidence} onChange={handleChange} className="input-field" placeholder="0.85" />
               </div>
-              
+
             </div>
 
             {error && (
@@ -178,7 +171,7 @@ function FieldGuard() {
             <div className="flex gap-3 pt-4 border-t border-forest-100">
               <button type="button" className="btn-secondary" onClick={handleReset}>Reset</button>
               <button type="submit" className="btn-primary flex-1 justify-center" disabled={loading}>
-                {loading ? <Loader2 size={16} className="spin" /> : <Shield size={16} />} 
+                {loading ? <Loader2 size={16} className="spin" /> : <Shield size={16} />}
                 {loading ? 'Evaluating Risk...' : 'Evaluate Risk Score'}
               </button>
             </div>
@@ -188,12 +181,12 @@ function FieldGuard() {
         {/* Results Panel */}
         <div className="lg:col-span-5 agri-card flex flex-col h-full">
           <h2 className="font-semibold text-forest-900 mb-4">Risk Assessment Report</h2>
-          
+
           {!result && !loading && (
-             <div className="flex-1 flex flex-col items-center justify-center text-center py-12 text-forest-400">
-               <Shield size={36} className="mb-3 opacity-40" />
-               <p className="text-sm">Submit the parameters to generate a risk assessment.</p>
-             </div>
+            <div className="flex-1 flex flex-col items-center justify-center text-center py-12 text-forest-400">
+              <Shield size={36} className="mb-3 opacity-40" />
+              <p className="text-sm">Submit the parameters to generate a risk assessment.</p>
+            </div>
           )}
 
           {loading && (
@@ -241,7 +234,7 @@ function FieldGuard() {
                   </ul>
                 </div>
               )}
-              
+
             </div>
           )}
         </div>
