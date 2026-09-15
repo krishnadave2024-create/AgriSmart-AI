@@ -1,200 +1,200 @@
 # 🌱 AgriSmart AI
 
-## Intelligent Agriculture for a Sustainable Future
+### Intelligent Agriculture for a Sustainable Future
 
 > **Smart Farming • Better Decisions**
 
+```{=html}
+<p align="center">
+```
+`<a href="https://drive.google.com/file/d/1HlXGWUtpl7usZgeoltVGg5c7qiq0_Kg7/view?usp=sharing">`{=html}
+🎥 Watch the Project Screen Recording `</a>`{=html}
+```{=html}
+</p>
+```
 AgriSmart AI is an AI-powered agricultural decision-support platform
-designed to help farmers make better, faster, and more sustainable
-farming decisions.
+designed to help Indian farmers make informed, efficient, and
+sustainable farming decisions.
 
-The platform brings important agricultural tools into one
-farmer-friendly application, including:
+The platform brings crop disease detection, agricultural guidance,
+irrigation support, weather intelligence, sustainability insights,
+farm-risk monitoring, and an AI-powered Farmer Assistant into one
+unified, farmer-friendly application.
 
--   AI-powered crop disease detection
--   Agricultural recommendations
--   Smart irrigation guidance
--   Weather intelligence
--   Sustainability insights
--   Field-risk monitoring
--   AI-powered Farmer Assistant
--   Farm dashboard and recent scan history
-
-AgriSmart AI is being developed as a software solution for the **Smart
-India Hackathon 2026**.
+This project is being developed as a software solution for **Smart India
+Hackathon 2026**.
 
 ------------------------------------------------------------------------
 
-## 📌 Table of Contents
+## 🎥 Project Demonstration
+
+A complete screen recording of the project is available here:
+
+### [▶️ Watch AgriSmart AI --- Project Demo](https://drive.google.com/file/d/1HlXGWUtpl7usZgeoltVGg5c7qiq0_Kg7/view?usp=sharing)
+
+The recording demonstrates the application interface and its major
+agricultural modules.
+
+> **Access note:** Set the Google Drive file permission to **Anyone with
+> the link → Viewer** so evaluators can open the recording.
+
+------------------------------------------------------------------------
+
+## 📌 Contents
 
 -   [Problem Statement](#-problem-statement)
--   [Our Solution](#-our-solution)
+-   [Proposed Solution](#-proposed-solution)
 -   [Objectives](#-objectives)
--   [Key Features](#-key-features)
+-   [Features](#-features)
+-   [Explainable AI](#-explainable-ai)
 -   [System Architecture](#-system-architecture)
 -   [Technology Stack](#-technology-stack)
--   [AI Disease Detection](#-ai-disease-detection)
--   [Farmer Assistant](#-farmer-assistant)
--   [Explainable AI](#-explainable-ai)
--   [Sustainability Focus](#-sustainability-focus)
 -   [Project Structure](#-project-structure)
 -   [Dataset and Model](#-dataset-and-model)
 -   [Installation](#-installation)
--   [Running the Application](#-running-the-application)
+-   [Running the Project](#-running-the-project)
 -   [API Overview](#-api-overview)
--   [Model Training](#-model-training)
+-   [Security and Privacy](#-security-and-privacy)
 -   [Current Limitations](#-current-limitations)
 -   [Future Scope](#-future-scope)
 -   [Contributing](#-contributing)
--   [License](#-license)
+-   [Project Information](#-project-information)
 
 ------------------------------------------------------------------------
 
 ## 🚜 Problem Statement
 
-Farmers regularly face challenges that directly affect crop
-productivity, income, and sustainability:
+Farmers face several challenges that can affect productivity, income,
+and resource efficiency:
 
--   Crop diseases are often identified too late.
+-   Crop diseases are often detected too late.
 -   Agricultural expertise may not be easily accessible.
--   Weather conditions can make farming decisions uncertain.
--   Irrigation is sometimes based on guesswork.
+-   Weather conditions make farm decisions uncertain.
+-   Irrigation is frequently based on estimation or habit.
 -   Excessive water and agricultural-input usage increases costs.
--   Technical agricultural platforms can be difficult to understand.
--   Farmers may receive information from multiple disconnected sources.
+-   Agricultural information is distributed across disconnected
+    platforms.
+-   Technical applications may be difficult for farmers to understand.
+-   Farmers need timely, localized, and practical guidance.
 
-There is a need for a unified, accessible, and explainable agricultural
-platform that supports practical day-to-day farming decisions.
+A unified, accessible, and explainable agricultural platform can help
+farmers make better day-to-day decisions.
 
 ------------------------------------------------------------------------
 
-## 💡 Our Solution
+## 💡 Proposed Solution
 
-AgriSmart AI combines agricultural intelligence and machine learning
-into a single digital platform.
+AgriSmart AI combines artificial intelligence, machine learning, and
+agricultural decision-support features in one platform.
 
-A farmer can use the platform to:
+The platform allows a farmer to:
 
 1.  Upload a crop or plant-leaf image.
 2.  Receive an AI-based disease prediction.
-3.  Understand the detected disease and its possible symptoms.
-4.  View prevention and management guidance.
-5.  Ask agriculture-related questions in natural language.
-6.  Review farm information and recent scans.
-7.  Explore irrigation, weather, crop, and sustainability insights.
-8.  Make more informed decisions using understandable explanations.
+3.  View disease details, symptoms, prevention, and management guidance.
+4.  Ask agriculture-related questions in natural language.
+5.  Review farm information and recent disease scans.
+6.  Explore crop, irrigation, weather, and sustainability insights.
+7.  Understand why a recommendation was made.
+8.  Make more informed and resource-efficient decisions.
 
-The application is designed for Indian farmers and is planned to support
+The interface is designed for accessibility and future support for
 **English, Hindi, and Gujarati**.
 
 ------------------------------------------------------------------------
 
 ## 🎯 Objectives
 
-The main objectives of AgriSmart AI are to:
-
 -   Encourage early crop-disease identification.
--   Make agricultural information easier to access.
+-   Improve access to agricultural knowledge.
+-   Support informed farm-management decisions.
 -   Reduce avoidable water wastage.
--   Support sustainable farming practices.
--   Provide simple and understandable AI recommendations.
--   Improve farmer decision-making through contextual information.
--   Combine multiple agricultural utilities in one platform.
--   Build a foundation for future multilingual and regional agricultural
-    services.
+-   Promote sustainable farming practices.
+-   Provide explainable AI recommendations.
+-   Combine agricultural utilities in one application.
+-   Improve access to digital agricultural services.
+-   Create a foundation for localized and multilingual support.
 
 ------------------------------------------------------------------------
 
-## ✨ Key Features
+## ✨ Features
 
-### 🔬 1. AI-Powered Disease Detection
+### 🔬 AI-Powered Disease Detection
 
-The Disease Detection module allows users to upload a plant or crop-leaf
-image for analysis.
+The Disease Detection module enables users to upload plant or crop-leaf
+images for analysis.
 
-Main capabilities include:
+**Capabilities include:**
 
 -   Image upload and preview
 -   Crop selection
 -   AI-based disease classification
--   Prediction confidence
--   Crop and disease information
+-   Prediction confidence score
+-   Crop and disease identification
 -   Disease description
--   Prevention guidance
+-   Disease prevention details
 -   Management recommendations
 -   Recent scan history
--   Disease analytics based on available scan records
+-   Disease analytics from available scan records
+-   Safe handling when the model or checkpoint is unavailable
 
-The system is designed to avoid displaying fabricated predictions. If
-the trained model or required configuration is unavailable, the backend
-should return an appropriate error instead of generating a fake result.
+The backend is designed not to generate fabricated predictions. If the
+model is unavailable or incompatible, the system should return a clear
+error.
 
-> **Important:** The current model is a development model trained on a
-> PlantVillage-based dataset. Performance on controlled dataset images
-> may differ from performance on real field images.
+> The current model is a development model trained using a
+> PlantVillage-based dataset. Controlled-dataset performance may differ
+> from real field performance.
 
-------------------------------------------------------------------------
+### 🌾 Crop Recommendation
 
-### 🌾 2. Crop Recommendation
+The Crop Recommendation module is designed to support crop-selection
+decisions using factors such as:
 
-The Crop Recommendation module is intended to support crop-selection
-decisions using information such as:
-
--   Crop type
 -   Soil characteristics
 -   Seasonal conditions
 -   Weather information
 -   Water availability
+-   Crop type
 -   Farming objectives
--   Sustainability considerations
+-   Sustainability requirements
+-   Regional agricultural conditions
 
-The recommendation process is designed to become more useful as reliable
-local agricultural and farm data are integrated.
+### 💧 Smart Irrigation
 
-------------------------------------------------------------------------
+The Smart Irrigation module focuses on efficient water management.
 
-### 💧 3. Smart Irrigation
+It is designed to support:
 
-The Smart Irrigation module focuses on better water-management
-decisions.
+-   Avoidance of unnecessary irrigation
+-   Reduction of overwatering
+-   Understanding of crop water requirements
+-   Consideration of crop growth stages
+-   Better water-use efficiency
+-   Explainable irrigation suggestions
 
-Planned and supported concepts include:
+The current project does not depend on physical IoT devices. Optional
+sensor integration may be considered in the future.
 
--   Avoiding unnecessary irrigation
--   Reducing overwatering
--   Considering crop growth stages
--   Understanding soil-moisture requirements
--   Supporting efficient water usage
--   Providing reasons behind irrigation suggestions
+### 🌦️ Weather Intelligence
 
-The current project does not depend on physical IoT devices. Sensor
-integration may be considered as a future enhancement.
-
-------------------------------------------------------------------------
-
-### 🌦️ 4. Weather Intelligence
-
-Weather Intelligence is intended to help farmers understand weather
-conditions that may affect farming activities.
-
-Possible information includes:
+The Weather Intelligence module is intended to help farmers understand
+conditions that may affect agricultural activities, including:
 
 -   Temperature
 -   Humidity
 -   Rainfall probability
--   Weather conditions
+-   Current weather conditions
 -   Weather-related crop risks
--   Irrigation planning support
+-   Irrigation planning
 -   Disease-risk context
 
-------------------------------------------------------------------------
+### 🛡️ FieldGuard
 
-### 🛡️ 5. FieldGuard
+FieldGuard is an agricultural risk-monitoring concept that presents
+potential farm risks in a simple format.
 
-FieldGuard is an agricultural risk-monitoring concept designed to
-present farm risks in a simple and understandable way.
-
-Potential risk indicators include:
+Potential indicators include:
 
 -   Foliar disease risk
 -   Moisture-related risk
@@ -203,17 +203,12 @@ Potential risk indicators include:
 -   Weather-related threats
 -   Recent crop-health information
 
-The feature is intended to help farmers identify risks early and take
-preventive action.
-
-------------------------------------------------------------------------
-
-### 🤖 6. Farmer Assistant
+### 🤖 Farmer Assistant
 
 The Farmer Assistant provides agriculture-focused conversational
-guidance using a configured AI provider.
+guidance through a configurable AI provider.
 
-Farmers can ask questions such as:
+Example questions include:
 
 -   How can I prevent fungal diseases in tomato plants?
 -   When should I irrigate my crop?
@@ -223,49 +218,34 @@ Farmers can ask questions such as:
 -   How can I reduce water wastage?
 -   How can I manage common crop diseases?
 
-The assistant is designed to provide:
+**Assistant capabilities:**
 
--   Natural-language responses
--   Context-aware agricultural guidance
+-   Natural-language interaction
+-   Agriculture-focused answers
+-   Context-aware guidance
 -   Simple explanations
 -   Practical suggestions
 -   Safety-conscious recommendations
--   Future multilingual support
+-   Configurable provider and model
+-   React-to-Django API communication
 
-The current implementation uses a configurable AI service so that the
-provider and model can be changed without redesigning the entire
-application.
+### 📊 Farmer Dashboard
 
-> AI-generated guidance should be verified with a qualified local
-> agricultural expert before making high-impact farming decisions.
+The dashboard provides a centralized overview of farm information, such
+as:
 
-------------------------------------------------------------------------
-
-### 📊 7. Farmer Dashboard
-
-The dashboard provides a central overview of important farm information.
-
-It may include:
-
--   Crop health indicators
+-   Crop-health indicators
 -   Disease-risk information
--   Soil-moisture indicators
+-   Soil-moisture information
 -   Weather summary
 -   Sustainability metrics
 -   Recent disease scans
+-   Farm and plot details
 -   Quick-access feature cards
--   Farm and plot information
 
-The dashboard is designed with a clean, farmer-friendly interface rather
-than a complex technical administration panel.
+### ♻️ Sustainability Insights
 
-------------------------------------------------------------------------
-
-### ♻️ 8. Sustainability Insights
-
-AgriSmart AI follows a sustainability-focused design approach.
-
-Recommendations may include understandable impact indicators such as:
+The platform can present understandable impact indicators such as:
 
 -   Estimated water conserved in litres
 -   Estimated electricity saved in kWh
@@ -273,30 +253,31 @@ Recommendations may include understandable impact indicators such as:
 -   Reduced unnecessary input usage
 -   Improved resource efficiency
 
-All estimated values should be clearly labelled as estimates unless they
-are calculated from verified field measurements.
+Values that are not calculated from verified field measurements must be
+clearly labelled as estimates.
 
 ------------------------------------------------------------------------
 
 ## 🧠 Explainable AI
 
-AgriSmart AI is built around the principle:
+AgriSmart AI follows the principle:
 
 > **Every important AI recommendation should explain why it was
 > suggested.**
 
-Instead of showing only a prediction or recommendation, the platform
-aims to communicate:
+The platform aims to communicate:
 
 -   What was detected
--   Why it may matter
+-   Why the result may matter
 -   What action can be considered
--   What conditions may increase the risk
+-   Which conditions may increase risk
 -   What the farmer should monitor
--   What environmental or financial benefit may be possible
+-   What environmental benefit may be possible
+-   What financial benefit may be possible
+-   What uncertainty or limitation exists
 
-This approach improves transparency and helps farmers make informed
-decisions instead of blindly trusting an AI output.
+This approach helps farmers understand recommendations instead of
+blindly following them.
 
 ------------------------------------------------------------------------
 
@@ -316,18 +297,22 @@ decisions instead of blindly trusting an AI output.
                                     ▼
                          ┌──────────────────────┐
                          │   Django Backend     │
-                         │ Auth and API Layer   │
-                         └───────┬───────┬──────┘
-                                 │       │
-                    ┌────────────▼─┐   ┌─▼────────────────┐
-                    │ Disease AI   │   │ Farmer Assistant  │
-                    │ PyTorch CNN  │   │ Configurable AI   │
-                    └──────────────┘   └──────────────────┘
-                                 │       │
-                                 ▼       ▼
+                         │ Authentication/API   │
+                         └──────────┬───────────┘
+                                    │
+                   ┌────────────────┴────────────────┐
+                   │                                 │
+                   ▼                                 ▼
+        ┌──────────────────────┐        ┌──────────────────────┐
+        │ Disease Detection   │        │ Farmer Assistant      │
+        │ PyTorch ResNet18     │        │ Gemini AI Service     │
+        └──────────┬───────────┘        └──────────┬───────────┘
+                   │                               │
+                   └────────────────┬──────────────┘
+                                    ▼
                          ┌──────────────────────┐
                          │ Data and Model Files │
-                         │ Datasets and Records  │
+                         │ Datasets and Records │
                          └──────────────────────┘
 ```
 
@@ -335,43 +320,15 @@ decisions instead of blindly trusting an AI output.
 
 ## 🛠️ Technology Stack
 
-### Frontend
-
--   React
--   JavaScript
--   Tailwind CSS
--   Lucide Icons
--   Responsive component-based UI
--   REST API integration
-
-### Backend
-
--   Python
--   Django
--   Django REST Framework
--   Django CORS Headers
--   Environment-based configuration
-
-### Machine Learning
-
--   PyTorch
--   Torchvision
--   ResNet18
--   Image preprocessing and classification
--   CSV-based dataset manifests
-
-### AI Assistant
-
--   Google Gemini API
--   `google-genai` SDK
--   Configurable provider and model settings
-
-### Development Tools
-
--   Google Colab
--   Git and GitHub
--   Visual Studio Code or Antigravity
--   Browser Developer Tools
+  Layer              Technologies
+  ------------------ -----------------------------------------------
+  Frontend           React, JavaScript, Tailwind CSS, Lucide Icons
+  Backend            Python, Django, Django REST Framework
+  Machine Learning   PyTorch, Torchvision, ResNet18, Pillow
+  AI Assistant       Google Gemini API, `google-genai` SDK
+  Data Processing    Python, CSV manifests, image preprocessing
+  Development        Google Colab, Git, GitHub, Antigravity
+  Communication      REST APIs
 
 ------------------------------------------------------------------------
 
@@ -387,12 +344,10 @@ AgriSmart-AI/
 │   │   ├── views.py
 │   │   ├── urls.py
 │   │   └── ...
-│   │
 │   ├── config/
 │   │   ├── settings.py
 │   │   ├── urls.py
 │   │   └── ...
-│   │
 │   ├── .env
 │   ├── manage.py
 │   └── AI_SETUP.md
@@ -431,47 +386,52 @@ AgriSmart-AI/
 
 ## 🧪 Dataset and Model
 
-### Development Dataset
+### Dataset
 
 The current development model uses a cleaned PlantVillage-based dataset.
 
-The dataset preparation process includes:
+The preparation workflow includes:
 
 -   Image inspection
+-   Invalid-image checking
 -   Duplicate detection
+-   Image-path validation
 -   Manifest generation
 -   Train/validation/test splitting
--   Image-path validation
 -   Class-label verification
 -   Image preprocessing
 
-The dataset contains **38 disease and healthy-leaf classes** in the
-current development setup.
+The current development setup contains **38 disease and healthy-leaf
+classes**.
 
 ### Model
 
-The current disease-classification model is based on:
+The disease-classification model uses:
 
--   ResNet18 architecture
+-   ResNet18
 -   Transfer learning
+-   PyTorch
+-   Torchvision
 -   Image resizing and normalization
 -   Multi-class classification
--   PyTorch inference
 
-The trained checkpoint is stored under:
+The trained checkpoint is expected at:
 
 ``` text
 model/checkpoints/baseline_resnet18.pth
 ```
 
-### Model Evaluation
+### Development Result
 
-The development training run achieved approximately **93.28% validation
+A development training run achieved approximately **93.28% validation
 accuracy after two epochs** on the prepared validation split.
 
-This result should not be interpreted as real-world field accuracy.
-Further testing with diverse field images, lighting conditions,
-backgrounds, camera devices, and regional crop varieties is required.
+This is not a guarantee of real-world field accuracy. Further evaluation
+is required using field images, different lighting conditions, complex
+backgrounds, different cameras, crop varieties, and disease stages.
+
+> The official SIH held-out dataset has not yet been verified or
+> integrated into the current development workflow.
 
 ------------------------------------------------------------------------
 
@@ -484,19 +444,19 @@ git clone <YOUR_GITHUB_REPOSITORY_URL>
 cd AgriSmart-AI
 ```
 
-### 2. Create a Python Virtual Environment
+### 2. Create a Virtual Environment
 
 ``` bash
 python -m venv venv
 ```
 
-Activate it on Windows:
+**Windows:**
 
 ``` powershell
 venv\Scripts\activate
 ```
 
-Activate it on Linux or macOS:
+**Linux/macOS:**
 
 ``` bash
 source venv/bin/activate
@@ -508,7 +468,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-If required, install the main backend packages:
+If required:
 
 ``` bash
 pip install django djangorestframework django-cors-headers python-dotenv google-genai torch torchvision pillow
@@ -516,7 +476,7 @@ pip install django djangorestframework django-cors-headers python-dotenv google-
 
 ### 4. Configure Environment Variables
 
-Create or update:
+Create:
 
 ``` text
 backend/.env
@@ -532,7 +492,7 @@ AI_API_KEY=your-gemini-api-key
 AI_MODEL=gemini-2.5-flash
 ```
 
-Never commit real API keys or passwords to GitHub.
+Never commit real API keys, passwords, tokens, or secrets.
 
 ### 5. Install Frontend Dependencies
 
@@ -543,11 +503,9 @@ npm install
 
 ------------------------------------------------------------------------
 
-## ▶️ Running the Application
+## ▶️ Running the Project
 
 ### Start the Django Backend
-
-Open a terminal:
 
 ``` bash
 cd backend
@@ -555,7 +513,7 @@ python manage.py migrate
 python manage.py runserver 127.0.0.1:8000
 ```
 
-The backend will be available at:
+Backend URL:
 
 ``` text
 http://127.0.0.1:8000
@@ -570,30 +528,26 @@ cd frontend
 npm run dev
 ```
 
-The frontend will normally be available at:
+Frontend URL:
 
 ``` text
 http://localhost:5173
 ```
 
-Open the application in a browser and log in before using protected
-features.
+Log in before using protected features.
 
 ------------------------------------------------------------------------
 
 ## 🔌 API Overview
 
-The exact routes may change as development continues. Current API
-functionality includes:
-
   Feature                      Method Endpoint
   -------------------------- -------- ---------------------------
-  Backend health check            GET `/api/health/`
-  Disease prediction             POST `/api/predict/`
-  Farmer Assistant health         GET `/api/assistant/health/`
-  Farmer Assistant message       POST `/api/assistant/message/`
+  Backend health check          `GET` `/api/health/`
+  Disease prediction           `POST` `/api/predict/`
+  Farmer Assistant health       `GET` `/api/assistant/health/`
+  Farmer Assistant message     `POST` `/api/assistant/message/`
 
-### Farmer Assistant Request Example
+### Farmer Assistant Request
 
 ``` json
 {
@@ -601,177 +555,166 @@ functionality includes:
 }
 ```
 
-The request must use the authentication method configured by the
+Protected endpoints must use the authentication method configured by the
 application.
 
-### Important API Practices
+### API Principles
 
--   Validate incoming data.
+-   Validate all incoming data.
 -   Require authentication for protected routes.
 -   Never expose API keys.
 -   Return consistent JSON responses.
 -   Handle provider failures safely.
--   Do not return fake predictions or fake AI responses.
 -   Use appropriate HTTP status codes.
--   Log only safe diagnostic information.
+-   Do not return fake predictions or fake AI responses.
+-   Validate uploaded files on the server.
 
 ------------------------------------------------------------------------
 
-## 🧠 Model Training
-
-The model-training workflow is designed to run locally or in Google
-Colab.
-
-Typical steps include:
-
-1.  Prepare the dataset.
-2.  Inspect image paths and labels.
-3.  Remove invalid or duplicate records.
-4.  Generate train, validation, and test manifests.
-5.  Create PyTorch data loaders.
-6.  Train the ResNet18 model.
-7.  Evaluate the model.
-8.  Save the checkpoint.
-9.  Copy the verified checkpoint into:
-
-``` text
-model/checkpoints/baseline_resnet18.pth
-```
-
-Before using the checkpoint in the Django API, verify that it matches
-the expected number of classes and model architecture.
-
-------------------------------------------------------------------------
-
-## 🔐 Security Considerations
+## 🔐 Security and Privacy
 
 -   Keep `.env` files private.
 -   Do not commit API keys.
--   Do not expose authentication tokens in logs.
--   Validate uploaded image types and file sizes.
--   Do not trust client-side crop or disease labels.
--   Use server-side validation for model inputs.
--   Avoid presenting uncertain predictions as confirmed diagnoses.
--   Verify high-impact agricultural recommendations with experts.
--   Configure CORS and allowed hosts correctly before deployment.
+-   Do not expose JWT tokens or session cookies.
+-   Validate uploaded file types and sizes.
+-   Validate user input on the server.
+-   Configure CORS carefully.
+-   Configure allowed hosts before deployment.
+-   Avoid logging sensitive information.
+-   Do not present uncertain predictions as confirmed diagnoses.
+-   Verify high-impact agricultural advice with qualified experts.
 
 ------------------------------------------------------------------------
 
 ## ⚠️ Current Limitations
 
-The current development version has several limitations:
-
--   The model is trained on a controlled development dataset.
--   Field-image performance has not yet been fully validated.
+-   The disease model is trained on a controlled development dataset.
+-   Real-world field-image performance requires additional validation.
 -   The official SIH held-out dataset has not been verified or
     integrated.
--   Some features use mock or demonstration data.
--   Weather and sustainability outputs may require reliable external
-    data sources.
--   Disease detection may be sensitive to image quality and lighting.
--   AI Assistant responses depend on provider availability, model
-    availability, network connectivity, and API configuration.
+-   Some modules may use mock or demonstration data.
+-   Weather features may require reliable external data sources.
+-   Sustainability values may be estimates.
+-   Disease predictions may be affected by image quality, lighting,
+    background, and camera type.
+-   Farmer Assistant responses depend on API configuration, network
+    connectivity, provider availability, and model availability.
+-   Multilingual support is planned for further development.
 -   IoT sensor integration is not currently included.
--   Multilingual support may be expanded in later versions.
 
 ------------------------------------------------------------------------
 
 ## 🚀 Future Scope
 
-Planned improvements include:
-
 -   Evaluation using real field images
--   Integration of the official SIH dataset when available
--   Improved model accuracy and calibration
+-   Integration of the official SIH dataset
+-   Improved model accuracy and confidence calibration
 -   Explainable disease-localization techniques
--   More crop and disease classes
--   Regional-language support
+-   Additional crops and disease classes
+-   English, Hindi, and Gujarati language support
 -   Voice-based Farmer Assistant
--   Offline or low-connectivity support
--   Reliable weather and agricultural data integration
--   Personalized farm profiles
--   Better irrigation recommendations
+-   Offline and low-connectivity support
+-   Reliable weather-data integration
+-   Personalized farmer profiles
 -   Regional crop calendars
+-   Improved irrigation recommendations
 -   Expert consultation workflows
 -   Farmer feedback and model-improvement loops
 -   Optional IoT and sensor integration
--   Deployment on scalable cloud infrastructure
+-   Cloud deployment and scalable infrastructure
 
 ------------------------------------------------------------------------
 
-## 🌍 Impact
+## 🌍 Expected Impact
 
-AgriSmart AI aims to contribute to:
+AgriSmart AI aims to support:
 
--   Earlier disease awareness
+-   Earlier awareness of crop diseases
 -   Better access to agricultural information
--   Reduced avoidable resource consumption
 -   More informed farm-management decisions
--   Improved digital access for farmers
--   Sustainable and technology-enabled agriculture
+-   Reduced avoidable water consumption
+-   Better resource efficiency
+-   Sustainable farming practices
+-   Improved access to digital agricultural services
+-   More transparent and understandable AI recommendations
 
-The long-term goal is to make agricultural intelligence more accessible,
-understandable, and useful for farmers.
+The long-term vision is to make agricultural intelligence accessible,
+explainable, and useful for farmers across India.
 
 ------------------------------------------------------------------------
 
 ## 🤝 Contributing
 
-Contributions are welcome.
-
-To contribute:
-
 1.  Fork the repository.
-2.  Create a feature branch.
+2.  Create a feature branch:
 
 ``` bash
 git checkout -b feature/your-feature-name
 ```
 
-3.  Make your changes.
-4.  Test the changes locally.
-5.  Commit your work.
+3.  Make and test your changes.
+4.  Commit your work:
 
 ``` bash
 git commit -m "Add meaningful feature"
 ```
 
-6.  Push the branch.
+5.  Push the branch:
 
 ``` bash
 git push origin feature/your-feature-name
 ```
 
-7.  Open a pull request.
+6.  Open a pull request.
 
-Please keep contributions focused, documented, tested, and consistent
-with the project architecture.
+Please keep contributions focused, tested, documented, secure, and
+consistent with the existing architecture.
 
 ------------------------------------------------------------------------
 
 ## 📄 License
 
-Add the appropriate project license before public distribution.
+Add an appropriate license before public distribution.
 
-If a license has not yet been selected, the project should not be
-assumed to be freely reusable or redistributable.
-
-------------------------------------------------------------------------
-
-## 👥 Project
-
-**Project Name:** AgriSmart AI\
-**Tagline:** Smart Farming • Better Decisions\
-**Event:** Smart India Hackathon 2026\
-**Domain:** Artificial Intelligence, Agriculture, Sustainable Technology
+Until a license is added, the project should not be assumed to be freely
+reusable, modified, or redistributed.
 
 ------------------------------------------------------------------------
 
-## ⭐ Acknowledgement
+## 👥 Project Information
 
-AgriSmart AI uses open-source technologies and development datasets to
-explore the application of artificial intelligence in agriculture.
+  Field               Details
+  ------------------- --------------------------------------------------------
+  Project Name        AgriSmart AI
+  Tagline             Smart Farming • Better Decisions
+  Event               Smart India Hackathon 2026
+  Domain              Artificial Intelligence and Agriculture
+  Focus Areas         Crop Health, Sustainability, Agricultural Intelligence
+  Frontend            React
+  Backend             Django and Django REST Framework
+  Disease Model       PyTorch ResNet18
+  AI Assistant        Google Gemini API
+  Development Tools   Google Colab, GitHub, Antigravity
+
+------------------------------------------------------------------------
+
+## 🙏 Acknowledgements
+
+AgriSmart AI uses open-source technologies, machine-learning frameworks,
+and development datasets to explore the application of artificial
+intelligence in agriculture.
 
 The project is intended to support farmers and agricultural stakeholders
 through accessible, explainable, and sustainability-focused digital
 tools.
+
+------------------------------------------------------------------------
+
+```{=html}
+<p align="center">
+```
+`<strong>`{=html}🌱 AgriSmart AI --- Smart Farming • Better
+Decisions`</strong>`{=html}
+```{=html}
+</p>
+```
