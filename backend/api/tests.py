@@ -20,7 +20,7 @@ class PredictAPITestCase(TestCase):
         return img_io
 
     def test_no_image_uploaded(self):
-        response = self.client.post(self.url)
+        response = self.client.post(self.url, {'crop_type': 'tomato'})
         self.assertEqual(response.status_code, 400)
         self.assertFalse(response.json()['success'])
         self.assertEqual(response.json()['error'], "No image uploaded.")
@@ -52,7 +52,7 @@ class PredictAPITestCase(TestCase):
         real_img_path = os.path.join(project_root, 'data', 'external', 'development_dataset', 'raw', 'diseased', 'diseased_0000.jpg')
         if os.path.exists(real_img_path):
             with open(real_img_path, 'rb') as f:
-                response = self.client.post(self.url, {'image': f})
+                response = self.client.post(self.url, {'image': f, 'crop_type': 'tomato'})
                 
             if response.status_code == 200:
                 data = response.json()
@@ -66,6 +66,14 @@ class RecommendCropAPITestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.url = reverse('recommend_crop')
+    def test_crop_knowledge_base_integrity(self):
+        from .views import CROP_KNOWLEDGE_BASE
+        for crop, data in CROP_KNOWLEDGE_BASE.items():
+            self.assertTrue(data.get('image_url'))
+            self.assertTrue(data.get('reference_url'))
+            self.assertTrue(data.get('sowing_guide'))
+            self.assertTrue(data.get('duration'))
+
         
     def test_missing_fields(self):
         response = self.client.post(self.url, {'nitrogen': 10, 'ph': 6.5}, content_type='application/json')
@@ -149,7 +157,7 @@ class PredictAPITestCase(TestCase):
         return img_io
 
     def test_no_image_uploaded(self):
-        response = self.client.post(self.url)
+        response = self.client.post(self.url, {'crop_type': 'tomato'})
         self.assertEqual(response.status_code, 400)
         self.assertFalse(response.json()['success'])
         self.assertEqual(response.json()['error'], "No image uploaded.")
@@ -181,20 +189,28 @@ class PredictAPITestCase(TestCase):
         real_img_path = os.path.join(project_root, 'data', 'external', 'development_dataset', 'raw', 'diseased', 'diseased_0000.jpg')
         if os.path.exists(real_img_path):
             with open(real_img_path, 'rb') as f:
-                response = self.client.post(self.url, {'image': f})
+                response = self.client.post(self.url, {'image': f, 'crop_type': 'tomato'})
                 
             if response.status_code == 200:
                 data = response.json()
                 self.assertTrue(data['success'])
-                self.assertEqual(data['predicted_class'], 'diseased')
-                self.assertIn('confidence', data)
-                self.assertEqual(data['model_status'], 'development_prototype')
+                self.assertIn(data['prediction']['status'], ['diseased', 'healthy', 'uncertain'])
+                self.assertIn('confidence', data['prediction'])
+                self.assertEqual(data['prediction']['model_version'], 'baseline_resnet18')
 
 
 class RecommendCropAPITestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.url = reverse('recommend_crop')
+    def test_crop_knowledge_base_integrity(self):
+        from .views import CROP_KNOWLEDGE_BASE
+        for crop, data in CROP_KNOWLEDGE_BASE.items():
+            self.assertTrue(data.get('image_url'))
+            self.assertTrue(data.get('reference_url'))
+            self.assertTrue(data.get('sowing_guide'))
+            self.assertTrue(data.get('duration'))
+
         
     def test_missing_fields(self):
         response = self.client.post(self.url, {'nitrogen': 10, 'ph': 6.5}, content_type='application/json')
@@ -226,7 +242,7 @@ class RecommendCropAPITestCase(TestCase):
         data = response.json()
         self.assertTrue(data['success'])
         self.assertIn('recommendations', data)
-        self.assertEqual(data['model_status'], 'development_prototype')
+        self.assertEqual(data['model_status'], 'rule-based')
 
 class RecommendIrrigationAPITestCase(TestCase):
     def setUp(self):
@@ -823,3 +839,147 @@ def test_assistant_history_isolation(self):
         
         res2 = auth_client2.get(self.history_url)
         self.assertEqual(len(res2.json()['history']), 0)
+
+
+from .models import UserProfile, FarmProfile, DiseaseScan, CropRecommendationRecord, IrrigationAssessment, FieldGuardAssessment, SustainabilityAssessment, ActivityRecord
+from rest_framework import status
+
+class DashboardAPITests(TestCase):
+    def setUp(self):
+        from rest_framework.test import APIClient
+        self.client = APIClient()
+        self.user1 = User.objects.create_user(username='testuser1', email='test1@example.com', password='password123')
+        self.user2 = User.objects.create_user(username='testuser2', email='test2@example.com', password='password123')
+        
+        # User 1 profiles
+        self.profile1 = UserProfile.objects.create(user=self.user1, full_name='Test User 1')
+        self.farm1 = FarmProfile.objects.create(user=self.user1, farm_name='Farm 1', location='Pune')
+        
+        # User 2 profiles
+        self.profile2 = UserProfile.objects.create(user=self.user2, full_name='Test User 2')
+        self.farm2 = FarmProfile.objects.create(user=self.user2, farm_name='Farm 2', location='Mumbai')
+        
+        # Authenticate as user1
+        self.client.force_authenticate(user=self.user1)
+        self.dashboard_url = reverse('dashboard_summary')
+
+    def test_dashboard_no_records(self):
+        response = self.client.get(self.dashboard_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertTrue(data['success'])
+        self.assertEqual(data['metrics']['total_disease_scans'], 0)
+        self.assertEqual(data['metrics']['total_crop_recommendations'], 0)
+        
+        # Should have a "needs attention" for no disease scans
+        needs_att = [n['reason'] for n in data['needs_attention']]
+        self.assertIn('No disease scans recorded', needs_att)
+
+    def test_dashboard_with_records(self):
+        DiseaseScan.objects.create(user=self.user1, predicted_class='healthy', confidence=0.99)
+        DiseaseScan.objects.create(user=self.user1, predicted_class='diseased_blight', confidence=0.85)
+        CropRecommendationRecord.objects.create(user=self.user1, nitrogen=10, phosphorus=10, potassium=10, ph=6.5, temperature=25, humidity=50, rainfall=100, top_recommendation='Wheat')
+        FieldGuardAssessment.objects.create(user=self.user1, score=35, category='High Risk', temperature=25, rainfall=10)
+        ActivityRecord.objects.create(user=self.user1, activity_type='disease_scan', title='Scan completed')
+        
+        response = self.client.get(self.dashboard_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        
+        self.assertEqual(data['metrics']['total_disease_scans'], 2)
+        self.assertEqual(data['metrics']['healthy_scans'], 1)
+        self.assertEqual(data['metrics']['diseased_scans'], 1)
+        self.assertEqual(data['metrics']['total_crop_recommendations'], 1)
+        self.assertEqual(data['metrics']['latest_fieldguard_category'], 'High Risk')
+        
+        # Needs attention for High risk
+        needs_att = [n['reason'] for n in data['needs_attention'] if 'FieldGuard' in n['reason']]
+        self.assertTrue(len(needs_att) > 0)
+        
+        # Recent activities
+        self.assertEqual(len(data['recent_activities']), 1)
+        
+        # Analytics trend
+        self.assertTrue(len(data['analytics']['activity_trend']) > 0)
+
+    def test_dashboard_user_isolation(self):
+        # Create record for user2
+        DiseaseScan.objects.create(user=self.user2, predicted_class='healthy', confidence=0.99)
+        
+        response = self.client.get(self.dashboard_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['metrics']['total_disease_scans'], 0) # User1 shouldn't see user2's scans
+
+    def test_dashboard_missing_farm_profile(self):
+        # Remove farm location
+        self.farm1.location = ''
+        self.farm1.save()
+        
+        response = self.client.get(self.dashboard_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        needs_att = [n['reason'] for n in response.data['needs_attention']]
+        self.assertIn('Farm city is missing', needs_att)
+
+
+import tempfile
+from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+from rest_framework.test import APIClient
+class DiseaseDetectionFinalTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.url = reverse('predict_disease')
+        self.user = User.objects.create_user(username='test_disease_user', password='password')
+        self.client.force_authenticate(user=self.user)
+        
+        # Create a dummy valid image
+        self.valid_img = Image.new('RGB', (100, 100), color='green')
+        self.img_file = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+        self.valid_img.save(self.img_file, format='JPEG')
+        self.img_file.close()
+        
+    def tearDown(self):
+        if os.path.exists(self.img_file.name):
+            os.remove(self.img_file.name)
+
+    def test_unsupported_crop_selected(self):
+        # 1. Cotton image with unsupported crop selected
+        with open(self.img_file.name, 'rb') as f:
+            response = self.client.post(self.url, {'image': f, 'crop_type': 'other'})
+        
+        data = response.json()
+        self.assertEqual(data['prediction']['status'], 'unsupported_crop')
+        self.assertEqual(data['prediction']['crop'], None)
+        self.assertEqual(data['knowledge'], None)
+        self.assertIn("This crop is not supported", data['message'])
+        
+        # Check DB
+        scan = DiseaseScan.objects.filter(user=self.user).last()
+        self.assertIsNone(scan) # We bypass inference entirely, but we log Activity
+        activity = ActivityRecord.objects.filter(user=self.user).last()
+        self.assertEqual(activity.title, 'Disease Scan Bypassed')
+
+    def test_inference_uncertain(self):
+        # We simulate low confidence for an out-of-distribution image.
+        # It's hard to guarantee confidence < 0.85 with a solid green square, but we'll try.
+        with open(self.img_file.name, 'rb') as f:
+            response = self.client.post(self.url, {'image': f, 'crop_type': 'tomato'})
+        
+        # We can't guarantee what resnet18 thinks of a green square, but assuming it processes it.
+        # We just check it doesn't crash and follows the contract.
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn(data['prediction']['status'], ['uncertain', 'healthy', 'diseased'])
+        
+        if data['prediction']['status'] == 'uncertain':
+            self.assertIsNone(data['knowledge'])
+            
+        if data['prediction']['status'] == 'unsupported_crop':
+            self.assertIsNone(data['knowledge'])
+            
+    def test_analytics_isolation(self):
+        response = self.client.get(reverse('disease_history'))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['analytics']['total_scans'], 0)

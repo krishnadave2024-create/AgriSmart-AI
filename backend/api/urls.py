@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import predict_disease, disease_history, recommend_crop, crop_history, current_weather, weather_forecast, recommend_irrigation, irrigation_history, sustainability_score, sustainability_history, farmer_assistant, assistant_history, fieldguard_assess, fieldguard_history, register_user, user_profile, farm_profile, logout_user, current_user, dashboard_summary
+from .views import predict_disease, disease_history, recommend_crop, crop_history, current_weather, weather_forecast, recommend_irrigation, irrigation_history, sustainability_score, sustainability_history, farmer_assistant, assistant_history, assistant_health, fieldguard_assess, fieldguard_history, register_user, user_profile, farm_profile, logout_user, current_user, dashboard_summary, predict_endpoint, health_check, get_notifications, mark_notification_read, mark_all_notifications_read, navbar_weather
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -16,13 +16,20 @@ urlpatterns = [
     path('crops/history/', crop_history, name='crop_history'),
     path('weather/current/', current_weather, name='current_weather'),
     path('weather/forecast/', weather_forecast, name='weather_forecast'),
+    path('weather/navbar/', navbar_weather, name='navbar_weather'),
     path('irrigation/recommend/', recommend_irrigation, name='recommend_irrigation'),
     path('irrigation/history/', irrigation_history, name='irrigation_history'),
     path('sustainability/score/', sustainability_score, name='sustainability_score'),
     path('sustainability/history/', sustainability_history, name='sustainability_history'),
     path('assistant/message/', farmer_assistant, name='farmer_assistant'),
     path('assistant/history/', assistant_history, name='assistant_history'),
+    path('assistant/health/', assistant_health, name='assistant_health'),
     path('fieldguard/assess/', fieldguard_assess, name='fieldguard_assess'),
     path('fieldguard/history/', fieldguard_history, name='fieldguard_history'),
     path('dashboard/summary/', dashboard_summary, name='dashboard_summary'),
+    path('notifications/', get_notifications, name='get_notifications'),
+    path('notifications/mark-read/<int:pk>/', mark_notification_read, name='mark_notification_read'),
+    path('notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('predict/', predict_endpoint, name='api_predict'),
+    path('health/', health_check, name='api_health'),
 ]

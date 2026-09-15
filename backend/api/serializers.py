@@ -54,3 +54,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         UserProfile.objects.create(user=user, full_name=full_name)
         FarmProfile.objects.create(user=user, farm_name=f"{full_name}'s Farm")
         return user
+
+from .models import Notification
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ('id', 'title', 'message', 'notification_type', 'severity', 'related_route', 'is_read', 'created_at')

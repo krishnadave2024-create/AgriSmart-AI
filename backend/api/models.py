@@ -41,6 +41,9 @@ class DiseaseScan(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='disease_scans')
     image = models.ImageField(upload_to='disease_scans/', blank=True, null=True)
     predicted_class = models.CharField(max_length=255)
+    prediction_status = models.CharField(max_length=50, default='uncertain')
+    plant_name = models.CharField(max_length=100, blank=True, null=True)
+    disease_name = models.CharField(max_length=100, blank=True, null=True)
     confidence = models.FloatField(blank=True, null=True)
     model_version = models.CharField(max_length=50, default='baseline_resnet18')
     is_development = models.BooleanField(default=True)
@@ -137,3 +140,16 @@ class AssistantMessage(models.Model):
     
     class Meta:
         ordering = ['created_at']
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    notification_type = models.CharField(max_length=50) # e.g., 'disease_scan', 'irrigation_assessment'
+    severity = models.CharField(max_length=20, default='info') # 'info', 'warning', 'error', 'success'
+    related_route = models.CharField(max_length=255, blank=True, null=True) # e.g., '/disease'
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']

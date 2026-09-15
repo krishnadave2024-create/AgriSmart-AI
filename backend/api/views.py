@@ -1,3 +1,5 @@
+from django.db.models import Count, Avg
+from django.db.models.functions import TruncDate
 import os
 import json
 import time
@@ -18,7 +20,7 @@ sys.path.append(os.path.join(project_root, 'model'))
 
 from .models import (
     UserProfile, FarmProfile, DiseaseScan, CropRecommendationRecord, 
-    IrrigationAssessment, FieldGuardAssessment, SustainabilityAssessment, ActivityRecord
+    IrrigationAssessment, FieldGuardAssessment, SustainabilityAssessment, ActivityRecord, Notification
 )
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import permission_classes
@@ -48,13 +50,13 @@ def predict_disease(request):
         
     image_file = request.FILES['image']
     
-    if image_file.size > 10 * 1024 * 1024:
-        return Response({"success": False, "error": "File size exceeds 10MB limit."}, status=status.HTTP_400_BAD_REQUEST)
+    if image_file.size > 15 * 1024 * 1024:
+        return Response({"success": False, "error": "File size exceeds 15MB limit."}, status=status.HTTP_400_BAD_REQUEST)
         
-    valid_extensions = ['.jpg', '.jpeg', '.png']
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
     ext = os.path.splitext(image_file.name)[1].lower()
     if ext not in valid_extensions:
-        return Response({"success": False, "error": "Unsupported file format. Please upload JPG or PNG."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"success": False, "error": "Unsupported file format. Please upload JPG, PNG, or WEBP."}, status=status.HTTP_400_BAD_REQUEST)
         
     model, classes = load_model()
     if model is None:
@@ -81,31 +83,6 @@ def predict_disease(request):
         predicted_class = classes[preds.item()]
         conf_value = round(confidence.item(), 4)
         
-        KNOWLEDGE_DB = {
-            'diseased': {
-                'disease_name': 'Unspecified Plant Disease',
-                'crop_name': 'Generic Crop / Leaf',
-                'symptoms': ['Abnormal spots or lesions on leaves', 'Discoloration (yellowing, browning)', 'Wilting or stunted growth', 'Fungal growth or powdery mildew visible'],
-                'causes': ['Fungal, bacterial, or viral pathogens', 'Environmental stress (drought, excessive moisture)', 'Pest infestations'],
-                'treatment': ['Isolate affected plants if possible', 'Apply broad-spectrum fungicide or appropriate targeted treatment', 'Prune heavily infected leaves or branches'],
-                'prevention': ['Ensure proper spacing for air circulation', 'Avoid overhead watering to keep foliage dry', 'Implement crop rotation and use disease-resistant varieties'],
-                'severity': 'Moderate to High',
-                'expert_consult': 'Consult an agronomist if symptoms spread rapidly to other plants or do not respond to basic treatments.'
-            },
-            'healthy': {
-                'disease_name': 'Healthy Plant',
-                'crop_name': 'Generic Crop / Leaf',
-                'symptoms': ['Vibrant green color', 'Firm and upright structure', 'No visible spots, lesions, or pests'],
-                'causes': ['Optimal growing conditions', 'Good soil health', 'Proper irrigation and nutrient management'],
-                'treatment': ['None required. Continue current care regimen.'],
-                'prevention': ['Maintain regular monitoring', 'Ensure balanced fertilization', 'Keep field weed-free'],
-                'severity': 'None',
-                'expert_consult': 'No immediate consultation needed. Keep up the good work!'
-            }
-        }
-        
-        knowledge = KNOWLEDGE_DB.get(predicted_class, KNOWLEDGE_DB['diseased'])
-        
         scan_record = None
         if request.user.is_authenticated:
             scan_record = DiseaseScan.objects.create(
@@ -113,8 +90,8 @@ def predict_disease(request):
                 image=image_file,
                 predicted_class=predicted_class,
                 confidence=conf_value,
-                model_version="baseline_resnet18",
-                is_development=True
+                model_version="baseline_resnet18_38class",
+                is_development=False
             )
             ActivityRecord.objects.create(
                 user=request.user,
@@ -126,12 +103,10 @@ def predict_disease(request):
         response_data = {
             "success": True,
             "predicted_class": predicted_class,
-            "confidence": conf_value,
-            "knowledge": knowledge,
-            "model_status": "development_prototype",
-            "is_development": True,
-            "model_version": "baseline_resnet18",
-            "warning": "This model was trained on a very small development dataset and is not production-ready. Official SIH dataset not yet available."
+            "confidence": round(conf_value * 100, 2),
+            "model_status": "active",
+            "is_development": False,
+            "model_version": "baseline_resnet18_38class",
         }
         
         if scan_record and scan_record.image:
@@ -950,15 +925,6 @@ def farmer_assistant(request):
         if language not in ['en', 'hi', 'gu']:
             language = 'en'
             
-        gemini_key = os.environ.get('GEMINI_API_KEY')
-        if not gemini_key or gemini_key == 'your_gemini_api_key_here':
-            return Response({
-                'success': False, 
-                'answer': None, 
-                'error': 'AI assistant is not configured on the backend.',
-                'model_status': 'unavailable'
-            }, status=503)
-            
         # Gather Context
         farm = FarmProfile.objects.filter(user=user).first()
         latest_disease = DiseaseScan.objects.filter(user=user).order_by('-created_at').first()
@@ -979,150 +945,49 @@ def farmer_assistant(request):
         if latest_fg:
             context_parts.append(f"Recent Risk Assessment: {latest_fg.category} (Score: {latest_fg.score})")
             
-        context_str = "\n".join(context_parts) if context_parts else "No specific farm data available."
+        context_str = "\\n".join(context_parts) if context_parts else "No specific farm data available."
         
-        system_prompt = f"""You are AgriSmart AI, a helpful and safe agricultural assistant.
-Reply in the following language code: {language} (en=English, hi=Hindi, gu=Gujarati).
-Use simple language suitable for farmers.
-Do not prescribe exact chemical dosages unless absolutely certain based on context.
-Recommend consulting a local agricultural expert for high-risk issues.
-Do not pretend to be a government officer or medical professional.
-Do not claim to use live IoT or satellite data.
-Here is the user's verified farm context (use it only if relevant to their question):
-{context_str}
-"""
+        from .services.ai_service import ask_assistant
+        success, status_code, response_data = ask_assistant(context_str, message, language)
         
-        client = genai.Client(api_key=gemini_key)
-        
-        configured_model = os.environ.get('GEMINI_MODEL', '').strip()
-        available_models = []
-        try:
-            for m in client.models.list():
-                if hasattr(m, 'supported_generation_methods'):
-                    if 'generateContent' in m.supported_generation_methods:
-                        available_models.append(m.name)
-                elif 'gemini' in m.name.lower():
-                    available_models.append(m.name)
-        except Exception:
-            available_models = []
-            
-        selected_model = None
-        if configured_model:
-            # Check if configured model exists, with or without models/ prefix
-            check_name = configured_model if configured_model.startswith('models/') else f"models/{configured_model}"
-            if check_name in available_models or configured_model in available_models:
-                selected_model = configured_model.replace('models/', '')
-        
-        if not selected_model and available_models:
-            # Fallback to the first available text model
-            text_models = [m for m in available_models if 'vision' not in m and 'embedding' not in m and 'audio' not in m and 'tts' not in m]
-            if text_models:
-                selected_model = text_models[0].replace('models/', '')
-            else:
-                selected_model = available_models[0].replace('models/', '')
-                
-        if not selected_model:
+        if success:
+            # Save history on success
+            AssistantMessage.objects.create(
+                user=user,
+                message=message,
+                response=response_data.get('answer'),
+                source=response_data.get('source', 'gemini'),
+                model_status=response_data.get('model_status', 'live')
+            )
             return Response({
-                'success': False, 
-                'answer': None, 
-                'error': 'No compatible Gemini generateContent model is available for this API key.',
-                'model_status': 'unavailable'
-            }, status=503)
-
-        max_attempts = 3
-        attempt = 0
-        answer = None
-        
-        # The list of candidate models starting with the selected one
-        candidate_models = [selected_model]
-        # Add a fallback text model if available, avoiding duplicates
-        if available_models:
-            text_models = [m for m in available_models if 'vision' not in m and 'embedding' not in m and 'audio' not in m and 'tts' not in m]
-            if text_models:
-                fallback = text_models[0].replace('models/', '')
-                if fallback not in candidate_models:
-                    candidate_models.append(fallback)
-        
-        while attempt < max_attempts and not answer:
-            current_model = candidate_models[0]
-            try:
-                response = client.models.generate_content(
-                    model=current_model,
-                    contents=message,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_prompt,
-                    )
-                )
-                answer = response.text
-            except Exception as e:
-                err_str = str(e).lower()
-                attempt += 1
-                
-                # Non-retryable errors
-                if '404' in err_str or 'not found' in err_str:
-                    return Response({
-                        'success': False, 
-                        'answer': None, 
-                        'error': 'The selected AI model is unavailable or not found (404).',
-                        'model_status': 'unavailable'
-                    }, status=503)
-                if '400' in err_str or '401' in err_str or '403' in err_str:
-                    return Response({
-                        'success': False,
-                        'answer': None,
-                        'error': f'AI provider configuration error: {err_str}',
-                        'model_status': 'error'
-                    }, status=500)
-                    
-                # Retryable errors
-                if attempt < max_attempts:
-                    # Switch to fallback model if we have one and this one failed
-                    if len(candidate_models) > 1:
-                        candidate_models.pop(0)
-                        
-                    # Exponential backoff: 1s, 2s, 4s...
-                    time.sleep(2 ** (attempt - 1))
-                    continue
-                else:
-                    return Response({
-                        'success': False,
-                        'answer': None,
-                        'error': 'The AI provider is temporarily busy. Please try again in a moment.',
-                        'model_status': 'temporarily_unavailable',
-                        'retryable': True
-                    }, status=503)
-        
-        if not answer:
-            raise ValueError("Empty response from AI provider")
+                'success': True,
+                **response_data
+            }, status=200)
+        else:
+            return Response({
+                'success': False,
+                **response_data
+            }, status=status_code)
             
-        # Save user message
-        AssistantMessage.objects.create(
-            user=user, role='user', content=message, language=language, 
-            provider_source='gemini', model_status='live'
-        )
-            
-        # Save assistant message
-        msg_obj = AssistantMessage.objects.create(
-            user=user, role='assistant', content=answer, language=language, 
-            provider_source='gemini', model_status='live'
-        )
-        
-        return Response({
-            'success': True,
-            'answer': answer,
-            'language': language,
-            'source': 'gemini',
-            'model_status': 'live',
-            'timestamp': msg_obj.created_at
-        })
-        
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return Response({
-            'success': False, 
-            'answer': None, 
-            'error': f'AI provider error: {str(e)}',
+            'success': False,
+            'answer': None,
+            'error': 'An unexpected server error occurred.',
             'model_status': 'error'
         }, status=500)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def assistant_health(request):
+    try:
+        from .services.ai_service import check_health
+        health = check_health()
+        return Response(health, status=200)
+    except Exception:
+        return Response({'available': False, 'reason': 'Error checking AI health'}, status=500)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -1307,7 +1172,7 @@ def fieldguard_history(request):
 
 from django.contrib.auth.models import User
 from .models import UserProfile, FarmProfile
-from .serializers import RegisterSerializer, UserProfileSerializer, FarmProfileSerializer
+from .serializers import RegisterSerializer, UserProfileSerializer, FarmProfileSerializer, NotificationSerializer
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
@@ -1394,11 +1259,13 @@ def current_user(request):
     })
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def dashboard_summary(request):
     user = request.user
+    profile = getattr(user, 'profile', None)
+    farm = getattr(user, 'farm', None)
     
-    # Aggregations
+    # 1. Overview metrics
     disease_scans = DiseaseScan.objects.filter(user=user)
     total_disease_scans = disease_scans.count()
     healthy_scans = disease_scans.filter(predicted_class__icontains='healthy').count()
@@ -1406,12 +1273,94 @@ def dashboard_summary(request):
     
     total_crop_recs = CropRecommendationRecord.objects.filter(user=user).count()
     total_irrigations = IrrigationAssessment.objects.filter(user=user).count()
-    total_fieldguard = FieldGuardAssessment.objects.filter(user=user).count()
     
     latest_fieldguard = FieldGuardAssessment.objects.filter(user=user).order_by('-created_at').first()
     latest_sustainability = SustainabilityAssessment.objects.filter(user=user).order_by('-created_at').first()
+    latest_disease = disease_scans.order_by('-created_at').first()
+    latest_crop = CropRecommendationRecord.objects.filter(user=user).order_by('-created_at').first()
+    latest_irrigation = IrrigationAssessment.objects.filter(user=user).order_by('-created_at').first()
     
-    recent_activities = ActivityRecord.objects.filter(user=user).order_by('-created_at')[:5]
+    # 2. Analytics (Time Series)
+    # Activity Trend (last 30 days or all time)
+    activity_trend = list(ActivityRecord.objects.filter(user=user)
+        .annotate(date=TruncDate('created_at'))
+        .values('date')
+        .annotate(count=Count('id'))
+        .order_by('date'))
+        
+    for item in activity_trend:
+        if item['date']:
+            item['date'] = item['date'].strftime('%Y-%m-%d')
+            
+    # FieldGuard Trend
+    fg_trend = list(FieldGuardAssessment.objects.filter(user=user).order_by('created_at')[:20].values('created_at', 'score', 'category'))
+    for item in fg_trend:
+        item['date'] = item['created_at'].strftime('%Y-%m-%d')
+        del item['created_at']
+        
+    # Sustainability Trend
+    sus_trend = list(SustainabilityAssessment.objects.filter(user=user).order_by('created_at')[:20].values('created_at', 'score', 'category'))
+    for item in sus_trend:
+        item['date'] = item['created_at'].strftime('%Y-%m-%d')
+        del item['created_at']
+        
+    # 3. Needs Attention
+    needs_attention = []
+    
+    # Farm Profile checks
+    if not farm or not farm.location:
+        needs_attention.append({
+            'reason': 'Farm city is missing',
+            'severity': 'warning',
+            'action': 'Update Farm Profile',
+            'link': '/farm-profile'
+        })
+    if not farm or not farm.soil_type:
+        needs_attention.append({
+            'reason': 'Soil type is not saved',
+            'severity': 'info',
+            'action': 'Update Farm Profile',
+            'link': '/farm-profile'
+        })
+        
+    # Data checks
+    if total_disease_scans == 0:
+        needs_attention.append({
+            'reason': 'No disease scans recorded',
+            'severity': 'info',
+            'action': 'Run a Disease Scan',
+            'link': '/disease'
+        })
+        
+    if latest_fieldguard and latest_fieldguard.score < 40:
+        needs_attention.append({
+            'reason': f'Latest FieldGuard risk is High ({latest_fieldguard.score}/100)',
+            'severity': 'error',
+            'action': 'View FieldGuard',
+            'link': '/fieldguard'
+        })
+        
+    if not needs_attention and total_disease_scans > 0:
+        needs_attention.append({
+            'reason': 'No urgent actions detected from your available records.',
+            'severity': 'success',
+            'action': 'View Analytics',
+            'link': '/'
+        })
+
+    # 4. Insights
+    insights = []
+    if latest_disease:
+        insights.append(f"Your latest disease scan resulted in '{latest_disease.predicted_class}'.")
+    if latest_fieldguard:
+        insights.append(f"Your latest FieldGuard assessment is categorized as '{latest_fieldguard.category}'.")
+    if latest_crop:
+        insights.append(f"Your most recent crop recommendation was '{latest_crop.top_recommendation}'.")
+    if latest_sustainability:
+        insights.append(f"Your latest sustainability score is {round(latest_sustainability.score)}/100.")
+        
+    # 5. Recent Activity
+    recent_activities = ActivityRecord.objects.filter(user=user).order_by('-created_at')[:6]
     activities_data = [{
         'id': a.id,
         'title': a.title,
@@ -1422,14 +1371,196 @@ def dashboard_summary(request):
     
     return Response({
         'success': True,
-        'total_disease_scans': total_disease_scans,
-        'healthy_scans': healthy_scans,
-        'diseased_scans': diseased_scans,
-        'total_crop_recommendations': total_crop_recs,
-        'total_irrigation_assessments': total_irrigations,
-        'total_fieldguard_assessments': total_fieldguard,
-        'latest_fieldguard_score': latest_fieldguard.score if latest_fieldguard else None,
-        'latest_fieldguard_category': latest_fieldguard.category if latest_fieldguard else None,
-        'latest_sustainability_score': latest_sustainability.score if latest_sustainability else None,
+        'metrics': {
+            'total_disease_scans': total_disease_scans,
+            'healthy_scans': healthy_scans,
+            'diseased_scans': diseased_scans,
+            'total_crop_recommendations': total_crop_recs,
+            'total_irrigation_assessments': total_irrigations,
+            'latest_disease_date': latest_disease.created_at if latest_disease else None,
+            'latest_disease_class': latest_disease.predicted_class if latest_disease else None,
+            'latest_crop_rec': latest_crop.top_recommendation if latest_crop else None,
+            'latest_irrigation_date': latest_irrigation.created_at if latest_irrigation else None,
+            'latest_fieldguard_score': latest_fieldguard.score if latest_fieldguard else None,
+            'latest_fieldguard_category': latest_fieldguard.category if latest_fieldguard else None,
+            'latest_fieldguard_date': latest_fieldguard.created_at if latest_fieldguard else None,
+            'latest_sustainability_score': latest_sustainability.score if latest_sustainability else None,
+            'latest_sustainability_category': latest_sustainability.category if latest_sustainability else None,
+            'latest_sustainability_date': latest_sustainability.created_at if latest_sustainability else None,
+            'missing_profile': not farm or not farm.farm_name or not farm.location
+        },
+        'analytics': {
+            'activity_trend': activity_trend,
+            'fieldguard_trend': fg_trend,
+            'sustainability_trend': sus_trend,
+        },
+        'needs_attention': needs_attention,
+        'insights': insights,
         'recent_activities': activities_data
     })
+# ── New ResNet18 Prediction API ──────────────────────────────────────────────
+_RESNET18_MODEL = None
+_RESNET18_CLASSES = None
+
+def _get_resnet18_model():
+    global _RESNET18_MODEL, _RESNET18_CLASSES
+    if _RESNET18_MODEL is not None:
+        return _RESNET18_MODEL, _RESNET18_CLASSES
+
+    import os
+    import torch
+    import torch.nn as nn
+    
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    chkpt_path = os.path.join(project_root, "model", "checkpoints", "baseline_resnet18.pth")
+    if not os.path.exists(chkpt_path):
+        return None, None
+
+    try:
+        from torchvision.models import resnet18
+        checkpoint = torch.load(chkpt_path, weights_only=False, map_location='cpu')
+        classes = checkpoint.get('classes', [])
+        if len(classes) != 38:
+            return None, None
+
+        model = resnet18(weights=None)
+        model.fc = nn.Linear(model.fc.in_features, len(classes))
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval()
+
+        _RESNET18_MODEL = model
+        _RESNET18_CLASSES = classes
+        return model, classes
+    except Exception as e:
+        print(f"Error loading ResNet18 model: {e}")
+        return None, None
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def predict_endpoint(request):
+    """
+    POST /api/predict/
+    """
+    if 'image_file' not in request.FILES:
+        return Response({"error": "Please upload an image using the image_file field."}, status=status.HTTP_400_BAD_REQUEST)
+        
+    image_file = request.FILES['image_file']
+    try:
+        from PIL import Image
+        img = Image.open(image_file).convert('RGB')
+    except Exception:
+        return Response({"error": "Invalid image file."}, status=status.HTTP_400_BAD_REQUEST)
+        
+    model, classes = _get_resnet18_model()
+    if model is None:
+        return Response({"error": "Model checkpoint is unavailable."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    import sys
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if os.path.join(project_root, 'model') not in sys.path:
+        sys.path.append(os.path.join(project_root, 'model'))
+    from dataset import get_transforms
+    import torch.nn.functional as F
+    import torch
+    
+    transform = get_transforms(is_train=False)
+    img_tensor = transform(img).unsqueeze(0)
+    
+    with torch.no_grad():
+        logits = model(img_tensor)
+        probs = F.softmax(logits, dim=1)[0]
+        
+    top_prob, top_idx = torch.max(probs, 0)
+    
+    return Response({
+        "success": True,
+        "predicted_class": classes[top_idx.item()],
+        "confidence": round(top_prob.item() * 100, 2),
+        "model": "ResNet18"
+    }, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
+    """
+    GET /api/health/
+    """
+    model, classes = _get_resnet18_model()
+    return Response({
+        "status": "ok",
+        "model_available": model is not None,
+        "num_classes": len(classes) if classes else 0,
+        "model": "ResNet18"
+    }, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_notifications(request):
+    try:
+        notifications = Notification.objects.filter(user=request.user)
+        serializer = NotificationSerializer(notifications, many=True)
+        unread_count = notifications.filter(is_read=False).count()
+        return Response({
+            'success': True,
+            'notifications': serializer.data,
+            'unread_count': unread_count
+        })
+    except Exception as e:
+        return Response({'success': False, 'error': str(e)}, status=500)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_notification_read(request, pk):
+    try:
+        notification = Notification.objects.get(pk=pk, user=request.user)
+        notification.is_read = True
+        notification.save()
+        return Response({'success': True})
+    except Notification.DoesNotExist:
+        return Response({'success': False, 'error': 'Notification not found'}, status=404)
+    except Exception as e:
+        return Response({'success': False, 'error': str(e)}, status=500)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_all_notifications_read(request):
+    try:
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({'success': True})
+    except Exception as e:
+        return Response({'success': False, 'error': str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def navbar_weather(request):
+    try:
+        farm = FarmProfile.objects.filter(user=request.user).first()
+        if not farm or not farm.location:
+            return Response({'success': False, 'error': 'Farm city not set.'}, status=400)
+            
+        api_key = os.environ.get('OPENWEATHER_API_KEY')
+        if not api_key or api_key == 'your_openweather_api_key_here':
+            return Response({'success': False, 'error': 'Weather service not configured.'}, status=503)
+            
+        url = f"http://api.openweathermap.org/data/2.5/weather?q={farm.location}&appid={api_key}&units=metric"
+        res = requests.get(url, timeout=5)
+        
+        if res.status_code == 200:
+            data = res.json()
+            return Response({
+                'success': True,
+                'temp': data['main']['temp'],
+                'description': data['weather'][0]['description'],
+                'icon': data['weather'][0]['icon'],
+                'location': farm.location
+            })
+        else:
+            return Response({'success': False, 'error': 'Failed to fetch weather data.'}, status=503)
+            
+    except Exception as e:
+        return Response({'success': False, 'error': str(e)}, status=500)

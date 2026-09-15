@@ -24,30 +24,40 @@ function FarmerAssistant() {
   const endRef = useRef(null)
 
   useEffect(() => {
-    fetchHistory()
+    fetchHistoryAndHealth()
   }, [])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, loading])
 
-  const fetchHistory = async () => {
+  const fetchHistoryAndHealth = async () => {
     setHistoryLoading(true)
     try {
-      const res = await api.get('/assistant/history/')
-      if (res.data.success && res.data.history) {
-        if (res.data.history.length > 0) {
-            setMessages(res.data.history)
-            setProviderStatus(res.data.history[res.data.history.length-1].model_status)
+      const [historyRes, healthRes] = await Promise.all([
+          api.get('/assistant/history/').catch(() => null),
+          api.get('/assistant/health/').catch(() => null)
+      ])
+      
+      const health = healthRes?.data
+      if (health?.available) {
+          setProviderStatus('live')
+      } else {
+          setProviderStatus('offline')
+      }
+
+      if (historyRes?.data?.success && historyRes.data.history) {
+        if (historyRes.data.history.length > 0) {
+            setMessages(historyRes.data.history)
         } else {
             // First time greeting
             setMessages([{ role: 'assistant', content: 'Hello! I am AgriSmart AI. I can securely access your farm profile and provide contextual agricultural advice. How can I help you today?', language: 'en' }])
-            setProviderStatus('live')
         }
       }
     } catch (err) {
       console.error('Failed to fetch chat history', err)
       setMessages([{ role: 'assistant', content: 'Could not connect to backend to retrieve history.', isError: true }])
+      setProviderStatus('error')
     } finally {
       setHistoryLoading(false)
     }
@@ -61,12 +71,11 @@ function FarmerAssistant() {
 
   const send = async (msgText, retryMsgObj = null) => {
     const text = (msgText || input).trim()
-    if (!text) return
+    if (!text || loading) return
     
     setInput('')
     
     if (retryMsgObj) {
-        // Remove the error message from the list since we are retrying
         setMessages(p => p.filter(m => m !== retryMsgObj))
     } else {
         const newMsg = { role: 'user', content: text, language: lang }
@@ -84,22 +93,48 @@ function FarmerAssistant() {
               content: r.data.answer, 
               source: r.data.source, 
               model_status: r.data.model_status,
-              timestamp: r.data.timestamp
+              timestamp: r.data.timestamp || new Date().toISOString()
           }])
-          setProviderStatus(r.data.model_status)
+          if (r.data.model_status === 'live') setProviderStatus('live')
       } else {
+          // This block might not be hit if backend returns non-200, which goes to catch
           setMessages(p => [...p, { 
               role: 'assistant', 
               content: r.data.error || "Failed to generate a response.", 
               isError: true,
-              retryable: r.data.retryable,
+              retryable: r.data.retryable || false,
               originalMessage: text
           }])
-          setProviderStatus(r.data.model_status || 'error')
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.error || "Could not reach the server. Please ensure the Django API is running."
-      const isRetryable = err.response?.status === 503 || err.response?.status === 429 || !err.response
+      const status = err.response?.status
+      const errorData = err.response?.data || {}
+      
+      let errorMsg = errorData.error || "Could not reach the server. Please try again."
+      let isRetryable = false
+      let newProviderStatus = providerStatus
+
+      if (status === 503) {
+          errorMsg = errorData.error || "Farmer Assistant is temporarily unavailable because its AI service is not configured. Please check the backend AI settings."
+          newProviderStatus = 'offline'
+      } else if (status === 504) {
+          errorMsg = "The response is taking too long. Please try again."
+          isRetryable = true
+      } else if (status === 429) {
+          errorMsg = "The AI service is temporarily busy. Please try again shortly."
+          isRetryable = true
+      } else if (status === 502) {
+          errorMsg = errorData.error || "The configured AI model is unavailable. Please check the provider and model configuration."
+          newProviderStatus = 'offline'
+      } else if (status === 400 || status === 401 || status === 403) {
+          errorMsg = errorData.error || "Invalid request or authentication error."
+      } else if (status >= 500) {
+          errorMsg = errorData.error || "An unexpected server error occurred."
+      } else if (!err.response) {
+          errorMsg = "Network error. Please check your connection."
+          isRetryable = true
+      }
+
       setMessages(p => [...p, { 
           role: 'assistant', 
           content: errorMsg, 
@@ -107,7 +142,7 @@ function FarmerAssistant() {
           retryable: isRetryable,
           originalMessage: text
       }])
-      setProviderStatus(err.response?.data?.model_status || 'error')
+      setProviderStatus(newProviderStatus)
     } finally { 
       setLoading(false) 
     }
@@ -120,8 +155,8 @@ function FarmerAssistant() {
         <div>
           <h1 className="page-title flex items-center gap-2">
             <Globe size={26} className="text-violet-600" /> AgriSmart AI
-            <span className={`badge ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${providerStatus === 'live' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {providerStatus === 'live' ? 'ONLINE (Gemini)' : 'OFFLINE'}
+            <span className={`badge ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${providerStatus === 'live' ? 'bg-green-100 text-green-700' : providerStatus === 'checking' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                {providerStatus === 'live' ? 'ONLINE' : providerStatus === 'checking' ? 'CHECKING...' : 'OFFLINE'}
             </span>
           </h1>
           <p className="page-subtitle">Real contextual agricultural intelligence</p>
@@ -202,7 +237,7 @@ function FarmerAssistant() {
         {loading && (
           <div className="self-start flex items-center gap-2 px-4 py-3 bg-white dark:bg-forest-950 border border-forest-100 dark:border-forest-800 rounded-2xl rounded-bl-sm shadow-agri max-w-[85%]">
             <Loader2 size={14} className="spin text-violet-500" />
-            <span className="text-xs text-forest-500">Processing contextual data…</span>
+            <span className="text-xs text-forest-500 font-medium tracking-wide animate-pulse">Thinking...</span>
           </div>
         )}
         <div ref={endRef} />
@@ -214,7 +249,7 @@ function FarmerAssistant() {
           <button
             key={i}
             onClick={() => send(q[lang] || q.en)}
-            className="text-xs px-3 py-1.5 rounded-full bg-forest-100 dark:bg-forest-800 text-forest-700 dark:text-forest-300 hover:bg-forest-200 dark:hover:bg-forest-700 transition-colors"
+            className="text-xs px-3 py-1.5 rounded-full bg-forest-100 dark:bg-forest-800 text-forest-700 dark:text-forest-300 hover:bg-forest-200 dark:hover:bg-forest-700 transition-colors disabled:opacity-50"
             disabled={loading}
           >
             {q[lang] || q.en}
@@ -232,11 +267,11 @@ function FarmerAssistant() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={lang === 'en' ? 'Ask about irrigation, disease, soil health…' : lang === 'hi' ? 'सिंचाई, रोग, मिट्टी के बारे में पूछें…' : 'સિંચાઈ, રોગ, જમીન વિશે પૂછો…'}
-          className="agri-input flex-1 dark:bg-forest-950 dark:border-forest-700 dark:text-white"
+          className="agri-input flex-1 dark:bg-forest-950 dark:border-forest-700 dark:text-white disabled:opacity-50"
           disabled={loading}
           maxLength={500}
         />
-        <button type="submit" className="btn-primary px-4 bg-violet-600 hover:bg-violet-700 focus:ring-violet-500" disabled={loading || !input.trim()} aria-label="Send message">
+        <button type="submit" className="btn-primary px-4 bg-violet-600 hover:bg-violet-700 focus:ring-violet-500 disabled:opacity-50" disabled={loading || !input.trim()} aria-label="Send message">
           <Send size={16} />
         </button>
       </form>

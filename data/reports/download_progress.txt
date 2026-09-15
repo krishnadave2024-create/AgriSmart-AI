@@ -1,0 +1,334 @@
+PlantVillage Bulk Download
+Started: 2026-09-15 13:59:32
+Selected classes: 19
+Max per class: 800
+
+Plan:
+  Tomato___Bacterial_spot: 800
+  Tomato___Early_blight: 800
+  Tomato___Late_blight: 800
+  Tomato___Leaf_Mold: 800
+  Tomato___Septoria_leaf_spot: 800
+  Tomato___Spider_mites Two-spotted_spider_mite: 800
+  Tomato___Target_Spot: 800
+  Tomato___Tomato_Yellow_Leaf_Curl_Virus: 800
+  Tomato___Tomato_mosaic_virus: 373
+  Tomato___healthy: 800
+  Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot: 513
+  Corn_(maize)___Common_rust_: 800
+  Corn_(maize)___Northern_Leaf_Blight: 800
+  Corn_(maize)___healthy: 800
+  Potato___Early_blight: 800
+  Potato___Late_blight: 800
+  Potato___healthy: 152
+  Pepper,_bell___Bacterial_spot: 800
+  Pepper,_bell___healthy: 800
+
+Total planned: 13838
+Already downloaded: 0/13838
+Remaining to download: 13838
+[50/13838] Done=50 Failed=0 Rate=5.6/s ETA=2450s
+[100/13838] Done=100 Failed=0 Rate=6.3/s ETA=2193s
+[150/13838] Done=150 Failed=0 Rate=6.3/s ETA=2164s
+[200/13838] Done=200 Failed=0 Rate=6.5/s ETA=2104s
+[250/13838] Done=250 Failed=0 Rate=6.5/s ETA=2075s
+[300/13838] Done=300 Failed=0 Rate=6.6/s ETA=2056s
+[350/13838] Done=350 Failed=0 Rate=6.6/s ETA=2054s
+[400/13838] Done=400 Failed=0 Rate=6.5/s ETA=2065s
+[450/13838] Done=450 Failed=0 Rate=6.5/s ETA=2054s
+[500/13838] Done=500 Failed=0 Rate=6.5/s ETA=2060s
+[550/13838] Done=550 Failed=0 Rate=6.5/s ETA=2052s
+[600/13838] Done=600 Failed=0 Rate=6.4/s ETA=2055s
+[650/13838] Done=650 Failed=0 Rate=6.4/s ETA=2050s
+[700/13838] Done=700 Failed=0 Rate=6.4/s ETA=2049s
+[750/13838] Done=750 Failed=0 Rate=6.5/s ETA=2027s
+[800/13838] Done=800 Failed=0 Rate=6.5/s ETA=2000s
+[850/13838] Done=850 Failed=0 Rate=6.6/s ETA=1974s
+[900/13838] Done=900 Failed=0 Rate=6.6/s ETA=1954s
+[950/13838] Done=950 Failed=0 Rate=6.7/s ETA=1932s
+[1000/13838] Done=1000 Failed=0 Rate=6.7/s ETA=1914s
+[1050/13838] Done=1050 Failed=0 Rate=6.7/s ETA=1895s
+[1100/13838] Done=1100 Failed=0 Rate=6.8/s ETA=1876s
+[1150/13838] Done=1150 Failed=0 Rate=6.8/s ETA=1860s
+[1200/13838] Done=1200 Failed=0 Rate=6.9/s ETA=1842s
+[1250/13838] Done=1250 Failed=0 Rate=6.7/s ETA=1868s
+[1300/13838] Done=1300 Failed=0 Rate=6.7/s ETA=1862s
+[1350/13838] Done=1350 Failed=0 Rate=6.7/s ETA=1859s
+[1400/13838] Done=1400 Failed=0 Rate=6.7/s ETA=1857s
+[1450/13838] Done=1450 Failed=0 Rate=6.7/s ETA=1854s
+[1500/13838] Done=1500 Failed=0 Rate=6.7/s ETA=1848s
+[1550/13838] Done=1550 Failed=0 Rate=6.7/s ETA=1844s
+[1600/13838] Done=1556 Failed=44 Rate=6.8/s ETA=1808s
+[1650/13838] Done=1556 Failed=94 Rate=6.9/s ETA=1769s
+[1700/13838] Done=1556 Failed=144 Rate=7.0/s ETA=1732s
+[1750/13838] Done=1556 Failed=194 Rate=7.1/s ETA=1697s
+[1800/13838] Done=1556 Failed=244 Rate=7.2/s ETA=1663s
+[1850/13838] Done=1556 Failed=294 Rate=7.4/s ETA=1630s
+[1900/13838] Done=1556 Failed=344 Rate=7.5/s ETA=1598s
+[1950/13838] Done=1556 Failed=394 Rate=7.6/s ETA=1567s
+[2000/13838] Done=1556 Failed=444 Rate=7.7/s ETA=1538s
+[2050/13838] Done=1556 Failed=494 Rate=7.8/s ETA=1510s
+[2100/13838] Done=1556 Failed=544 Rate=7.9/s ETA=1483s
+[2150/13838] Done=1556 Failed=594 Rate=8.0/s ETA=1457s
+[2200/13838] Done=1556 Failed=644 Rate=8.1/s ETA=1433s
+[2250/13838] Done=1556 Failed=694 Rate=8.2/s ETA=1409s
+[2300/13838] Done=1556 Failed=744 Rate=8.3/s ETA=1386s
+[2350/13838] Done=1556 Failed=794 Rate=8.4/s ETA=1364s
+[2400/13838] Done=1556 Failed=844 Rate=8.5/s ETA=1342s
+[2450/13838] Done=1556 Failed=894 Rate=8.6/s ETA=1322s
+[2500/13838] Done=1556 Failed=944 Rate=8.7/s ETA=1303s
+[2550/13838] Done=1556 Failed=994 Rate=8.8/s ETA=1284s
+[2600/13838] Done=1556 Failed=1044 Rate=8.9/s ETA=1265s
+[2650/13838] Done=1556 Failed=1094 Rate=9.0/s ETA=1247s
+[2700/13838] Done=1556 Failed=1144 Rate=9.1/s ETA=1230s
+[2750/13838] Done=1556 Failed=1194 Rate=9.1/s ETA=1213s
+[2800/13838] Done=1556 Failed=1244 Rate=9.2/s ETA=1197s
+[2850/13838] Done=1556 Failed=1294 Rate=9.3/s ETA=1182s
+[2900/13838] Done=1556 Failed=1344 Rate=9.4/s ETA=1166s
+[2950/13838] Done=1594 Failed=1356 Rate=9.4/s ETA=1162s
+[3000/13838] Done=1644 Failed=1356 Rate=9.3/s ETA=1161s
+[3050/13838] Done=1694 Failed=1356 Rate=9.3/s ETA=1164s
+[3100/13838] Done=1744 Failed=1356 Rate=9.2/s ETA=1167s
+[3150/13838] Done=1794 Failed=1356 Rate=9.1/s ETA=1170s
+[3200/13838] Done=1844 Failed=1356 Rate=9.1/s ETA=1172s
+[3250/13838] Done=1894 Failed=1356 Rate=9.0/s ETA=1174s
+[3300/13838] Done=1944 Failed=1356 Rate=9.0/s ETA=1176s
+[3350/13838] Done=1994 Failed=1356 Rate=8.9/s ETA=1178s
+[3400/13838] Done=2044 Failed=1356 Rate=8.9/s ETA=1178s
+[3450/13838] Done=2094 Failed=1356 Rate=8.8/s ETA=1177s
+[3500/13838] Done=2144 Failed=1356 Rate=8.8/s ETA=1174s
+[3550/13838] Done=2194 Failed=1356 Rate=8.8/s ETA=1170s
+[3600/13838] Done=2244 Failed=1356 Rate=8.8/s ETA=1167s
+[3650/13838] Done=2294 Failed=1356 Rate=8.8/s ETA=1163s
+[3700/13838] Done=2344 Failed=1356 Rate=8.7/s ETA=1159s
+[3750/13838] Done=2394 Failed=1356 Rate=8.7/s ETA=1158s
+[3800/13838] Done=2444 Failed=1356 Rate=8.7/s ETA=1154s
+[3850/13838] Done=2494 Failed=1356 Rate=8.7/s ETA=1150s
+[3900/13838] Done=2544 Failed=1356 Rate=8.7/s ETA=1146s
+[3950/13838] Done=2594 Failed=1356 Rate=8.6/s ETA=1149s
+[4000/13838] Done=2644 Failed=1356 Rate=8.6/s ETA=1148s
+[4050/13838] Done=2694 Failed=1356 Rate=8.5/s ETA=1147s
+[4100/13838] Done=2744 Failed=1356 Rate=8.5/s ETA=1147s
+[4150/13838] Done=2794 Failed=1356 Rate=8.5/s ETA=1145s
+[4200/13838] Done=2844 Failed=1356 Rate=8.4/s ETA=1144s
+[4250/13838] Done=2894 Failed=1356 Rate=8.4/s ETA=1143s
+[4300/13838] Done=2944 Failed=1356 Rate=8.4/s ETA=1141s
+[4350/13838] Done=2994 Failed=1356 Rate=8.3/s ETA=1139s
+[4400/13838] Done=3044 Failed=1356 Rate=8.3/s ETA=1137s
+[4450/13838] Done=3054 Failed=1396 Rate=8.3/s ETA=1127s
+[4500/13838] Done=3054 Failed=1446 Rate=8.4/s ETA=1115s
+[4550/13838] Done=3054 Failed=1496 Rate=8.4/s ETA=1103s
+[4600/13838] Done=3054 Failed=1546 Rate=8.5/s ETA=1092s
+[4650/13838] Done=3054 Failed=1596 Rate=8.5/s ETA=1080s
+[4700/13838] Done=3054 Failed=1646 Rate=8.5/s ETA=1069s
+[4750/13838] Done=3054 Failed=1696 Rate=8.6/s ETA=1058s
+[4800/13838] Done=3054 Failed=1746 Rate=8.6/s ETA=1047s
+[4850/13838] Done=3054 Failed=1796 Rate=8.7/s ETA=1036s
+[4900/13838] Done=3054 Failed=1846 Rate=8.7/s ETA=1026s
+[4950/13838] Done=3054 Failed=1896 Rate=8.8/s ETA=1015s
+[5000/13838] Done=3054 Failed=1946 Rate=8.8/s ETA=1005s
+[5050/13838] Done=3054 Failed=1996 Rate=8.8/s ETA=995s
+[5100/13838] Done=3054 Failed=2046 Rate=8.9/s ETA=985s
+[5150/13838] Done=3054 Failed=2096 Rate=8.9/s ETA=975s
+[5200/13838] Done=3054 Failed=2146 Rate=8.9/s ETA=965s
+[5250/13838] Done=3054 Failed=2196 Rate=9.0/s ETA=956s
+[5300/13838] Done=3054 Failed=2246 Rate=9.0/s ETA=946s
+[5350/13838] Done=3054 Failed=2296 Rate=9.1/s ETA=937s
+[5400/13838] Done=3054 Failed=2346 Rate=9.1/s ETA=928s
+[5450/13838] Done=3054 Failed=2396 Rate=9.1/s ETA=918s
+[5500/13838] Done=3054 Failed=2446 Rate=9.2/s ETA=909s
+[5550/13838] Done=3054 Failed=2496 Rate=9.2/s ETA=900s
+[5600/13838] Done=3054 Failed=2546 Rate=9.2/s ETA=891s
+[5650/13838] Done=3054 Failed=2596 Rate=9.3/s ETA=883s
+[5700/13838] Done=3091 Failed=2609 Rate=9.3/s ETA=879s
+[5750/13838] Done=3141 Failed=2609 Rate=9.2/s ETA=876s
+[5800/13838] Done=3191 Failed=2609 Rate=9.2/s ETA=873s
+[5850/13838] Done=3241 Failed=2609 Rate=9.2/s ETA=870s
+[5900/13838] Done=3291 Failed=2609 Rate=9.2/s ETA=867s
+[5950/13838] Done=3341 Failed=2609 Rate=9.1/s ETA=864s
+[6000/13838] Done=3391 Failed=2609 Rate=9.1/s ETA=861s
+[6050/13838] Done=3441 Failed=2609 Rate=9.1/s ETA=858s
+[6100/13838] Done=3491 Failed=2609 Rate=9.0/s ETA=856s
+[6150/13838] Done=3541 Failed=2609 Rate=9.0/s ETA=853s
+[6200/13838] Done=3591 Failed=2609 Rate=9.0/s ETA=851s
+[6250/13838] Done=3641 Failed=2609 Rate=8.9/s ETA=848s
+[6300/13838] Done=3691 Failed=2609 Rate=8.9/s ETA=846s
+[6350/13838] Done=3741 Failed=2609 Rate=8.9/s ETA=843s
+[6400/13838] Done=3791 Failed=2609 Rate=8.9/s ETA=840s
+[6450/13838] Done=3841 Failed=2609 Rate=8.8/s ETA=837s
+[6500/13838] Done=3891 Failed=2609 Rate=8.8/s ETA=834s
+[6550/13838] Done=3941 Failed=2609 Rate=8.8/s ETA=831s
+[6600/13838] Done=3991 Failed=2609 Rate=8.7/s ETA=828s
+[6650/13838] Done=4041 Failed=2609 Rate=8.7/s ETA=825s
+[6700/13838] Done=4091 Failed=2609 Rate=8.7/s ETA=822s
+[6750/13838] Done=4141 Failed=2609 Rate=8.7/s ETA=819s
+[6800/13838] Done=4191 Failed=2609 Rate=8.6/s ETA=815s
+[6850/13838] Done=4241 Failed=2609 Rate=8.6/s ETA=812s
+[6900/13838] Done=4291 Failed=2609 Rate=8.6/s ETA=808s
+[6950/13838] Done=4341 Failed=2609 Rate=8.6/s ETA=804s
+[7000/13838] Done=4391 Failed=2609 Rate=8.5/s ETA=801s
+[7050/13838] Done=4441 Failed=2609 Rate=8.5/s ETA=797s
+[7100/13838] Done=4491 Failed=2609 Rate=8.5/s ETA=793s
+[7150/13838] Done=4541 Failed=2609 Rate=8.5/s ETA=789s
+[7200/13838] Done=4552 Failed=2648 Rate=8.5/s ETA=782s
+[7250/13838] Done=4552 Failed=2698 Rate=8.5/s ETA=773s
+[7300/13838] Done=4552 Failed=2748 Rate=8.5/s ETA=765s
+[7350/13838] Done=4552 Failed=2798 Rate=8.6/s ETA=757s
+[7400/13838] Done=4552 Failed=2848 Rate=8.6/s ETA=749s
+[7450/13838] Done=4552 Failed=2898 Rate=8.6/s ETA=740s
+[7500/13838] Done=4552 Failed=2948 Rate=8.7/s ETA=732s
+[7550/13838] Done=4552 Failed=2998 Rate=8.7/s ETA=724s
+[7600/13838] Done=4552 Failed=3048 Rate=8.7/s ETA=717s
+[7650/13838] Done=4552 Failed=3098 Rate=8.7/s ETA=709s
+[7700/13838] Done=4552 Failed=3148 Rate=8.8/s ETA=701s
+[7750/13838] Done=4552 Failed=3198 Rate=8.8/s ETA=693s
+[7800/13838] Done=4552 Failed=3248 Rate=8.8/s ETA=686s
+[7850/13838] Done=4552 Failed=3298 Rate=8.8/s ETA=678s
+[7900/13838] Done=4552 Failed=3348 Rate=8.9/s ETA=670s
+[7950/13838] Done=4552 Failed=3398 Rate=8.9/s ETA=663s
+[8000/13838] Done=4552 Failed=3448 Rate=8.9/s ETA=655s
+[8050/13838] Done=4552 Failed=3498 Rate=8.9/s ETA=648s
+[8100/13838] Done=4552 Failed=3548 Rate=9.0/s ETA=641s
+[8150/13838] Done=4552 Failed=3598 Rate=9.0/s ETA=633s
+[8200/13838] Done=4567 Failed=3633 Rate=9.0/s ETA=627s
+[8250/13838] Done=4617 Failed=3633 Rate=9.0/s ETA=623s
+[8300/13838] Done=4667 Failed=3633 Rate=9.0/s ETA=619s
+[8350/13838] Done=4717 Failed=3633 Rate=8.9/s ETA=614s
+[8400/13838] Done=4767 Failed=3633 Rate=8.9/s ETA=609s
+[8450/13838] Done=4817 Failed=3633 Rate=8.9/s ETA=605s
+[8500/13838] Done=4867 Failed=3633 Rate=8.9/s ETA=600s
+[8550/13838] Done=4917 Failed=3633 Rate=8.9/s ETA=596s
+[8600/13838] Done=4967 Failed=3633 Rate=8.9/s ETA=591s
+[8650/13838] Done=5017 Failed=3633 Rate=8.8/s ETA=587s
+[8700/13838] Done=5067 Failed=3633 Rate=8.8/s ETA=582s
+[8750/13838] Done=5117 Failed=3633 Rate=8.8/s ETA=577s
+[8800/13838] Done=5167 Failed=3633 Rate=8.8/s ETA=573s
+[8850/13838] Done=5217 Failed=3633 Rate=8.8/s ETA=568s
+[8900/13838] Done=5267 Failed=3633 Rate=8.8/s ETA=563s
+[8950/13838] Done=5317 Failed=3633 Rate=8.8/s ETA=559s
+[9000/13838] Done=5367 Failed=3633 Rate=8.7/s ETA=554s
+[9050/13838] Done=5417 Failed=3633 Rate=8.7/s ETA=549s
+[9100/13838] Done=5467 Failed=3633 Rate=8.7/s ETA=545s
+[9150/13838] Done=5517 Failed=3633 Rate=8.7/s ETA=540s
+[9200/13838] Done=5567 Failed=3633 Rate=8.7/s ETA=535s
+[9250/13838] Done=5617 Failed=3633 Rate=8.6/s ETA=531s
+[9300/13838] Done=5667 Failed=3633 Rate=8.6/s ETA=526s
+[9350/13838] Done=5717 Failed=3633 Rate=8.6/s ETA=521s
+[9400/13838] Done=5767 Failed=3633 Rate=8.6/s ETA=516s
+[9450/13838] Done=5817 Failed=3633 Rate=8.6/s ETA=511s
+[9500/13838] Done=5867 Failed=3633 Rate=8.6/s ETA=506s
+[9550/13838] Done=5917 Failed=3633 Rate=8.6/s ETA=500s
+[9600/13838] Done=5967 Failed=3633 Rate=8.6/s ETA=495s
+[9650/13838] Done=6017 Failed=3633 Rate=8.5/s ETA=490s
+[9700/13838] Done=6051 Failed=3649 Rate=8.5/s ETA=484s
+[9750/13838] Done=6051 Failed=3699 Rate=8.6/s ETA=477s
+[9800/13838] Done=6051 Failed=3749 Rate=8.6/s ETA=470s
+[9850/13838] Done=6051 Failed=3799 Rate=8.6/s ETA=463s
+[9900/13838] Done=6051 Failed=3849 Rate=8.6/s ETA=456s
+[9950/13838] Done=6051 Failed=3899 Rate=8.6/s ETA=450s
+[10000/13838] Done=6051 Failed=3949 Rate=8.7/s ETA=443s
+[10050/13838] Done=6051 Failed=3999 Rate=8.7/s ETA=436s
+[10100/13838] Done=6051 Failed=4049 Rate=8.7/s ETA=429s
+[10150/13838] Done=6051 Failed=4099 Rate=8.7/s ETA=422s
+[10200/13838] Done=6051 Failed=4149 Rate=8.8/s ETA=415s
+[10250/13838] Done=6051 Failed=4199 Rate=8.8/s ETA=409s
+[10300/13838] Done=6051 Failed=4249 Rate=8.8/s ETA=402s
+[10350/13838] Done=6051 Failed=4299 Rate=8.8/s ETA=395s
+[10400/13838] Done=6051 Failed=4349 Rate=8.8/s ETA=389s
+[10450/13838] Done=6051 Failed=4399 Rate=8.9/s ETA=382s
+[10500/13838] Done=6051 Failed=4449 Rate=8.9/s ETA=376s
+[10550/13838] Done=6051 Failed=4499 Rate=8.9/s ETA=369s
+[10600/13838] Done=6051 Failed=4549 Rate=8.9/s ETA=363s
+[10650/13838] Done=6051 Failed=4599 Rate=9.0/s ETA=356s
+[10700/13838] Done=6051 Failed=4649 Rate=9.0/s ETA=350s
+[10750/13838] Done=6051 Failed=4699 Rate=9.0/s ETA=343s
+[10800/13838] Done=6051 Failed=4749 Rate=9.0/s ETA=337s
+[10850/13838] Done=6051 Failed=4799 Rate=9.0/s ETA=331s
+[10900/13838] Done=6051 Failed=4849 Rate=9.1/s ETA=324s
+[10950/13838] Done=6051 Failed=4899 Rate=9.1/s ETA=318s
+[11000/13838] Done=6051 Failed=4949 Rate=9.1/s ETA=312s
+[11050/13838] Done=6087 Failed=4963 Rate=9.1/s ETA=307s
+[11100/13838] Done=6137 Failed=4963 Rate=9.1/s ETA=302s
+[11150/13838] Done=6187 Failed=4963 Rate=9.1/s ETA=297s
+[11200/13838] Done=6237 Failed=4963 Rate=9.0/s ETA=292s
+[11250/13838] Done=6287 Failed=4963 Rate=9.0/s ETA=287s
+[11300/13838] Done=6337 Failed=4963 Rate=9.0/s ETA=282s
+[11350/13838] Done=6387 Failed=4963 Rate=9.0/s ETA=277s
+[11400/13838] Done=6437 Failed=4963 Rate=9.0/s ETA=272s
+[11450/13838] Done=6487 Failed=4963 Rate=8.9/s ETA=267s
+[11500/13838] Done=6537 Failed=4963 Rate=8.9/s ETA=262s
+[11550/13838] Done=6587 Failed=4963 Rate=8.9/s ETA=257s
+[11600/13838] Done=6637 Failed=4963 Rate=8.9/s ETA=252s
+[11650/13838] Done=6687 Failed=4963 Rate=8.9/s ETA=247s
+[11700/13838] Done=6737 Failed=4963 Rate=8.9/s ETA=241s
+[11750/13838] Done=6787 Failed=4963 Rate=8.8/s ETA=236s
+[11800/13838] Done=6837 Failed=4963 Rate=8.8/s ETA=231s
+[11850/13838] Done=6887 Failed=4963 Rate=8.8/s ETA=225s
+[11900/13838] Done=6937 Failed=4963 Rate=8.8/s ETA=220s
+[11950/13838] Done=6987 Failed=4963 Rate=8.8/s ETA=214s
+[12000/13838] Done=7037 Failed=4963 Rate=8.8/s ETA=209s
+[12050/13838] Done=7087 Failed=4963 Rate=8.8/s ETA=204s
+[12100/13838] Done=7137 Failed=4963 Rate=8.8/s ETA=198s
+[12150/13838] Done=7187 Failed=4963 Rate=8.7/s ETA=193s
+[12200/13838] Done=7237 Failed=4963 Rate=8.7/s ETA=188s
+[12250/13838] Done=7287 Failed=4963 Rate=8.7/s ETA=182s
+[12300/13838] Done=7337 Failed=4963 Rate=8.7/s ETA=177s
+[12350/13838] Done=7387 Failed=4963 Rate=8.7/s ETA=171s
+[12400/13838] Done=7437 Failed=4963 Rate=8.7/s ETA=166s
+[12450/13838] Done=7487 Failed=4963 Rate=8.7/s ETA=160s
+[12500/13838] Done=7537 Failed=4963 Rate=8.7/s ETA=155s
+[12550/13838] Done=7551 Failed=4999 Rate=8.7/s ETA=149s
+[12600/13838] Done=7551 Failed=5049 Rate=8.7/s ETA=143s
+[12650/13838] Done=7551 Failed=5099 Rate=8.7/s ETA=137s
+[12700/13838] Done=7551 Failed=5149 Rate=8.7/s ETA=131s
+[12750/13838] Done=7551 Failed=5199 Rate=8.7/s ETA=125s
+[12800/13838] Done=7551 Failed=5249 Rate=8.7/s ETA=119s
+[12850/13838] Done=7551 Failed=5299 Rate=8.8/s ETA=113s
+[12900/13838] Done=7551 Failed=5349 Rate=8.8/s ETA=107s
+[12950/13838] Done=7551 Failed=5399 Rate=8.8/s ETA=101s
+[13000/13838] Done=7551 Failed=5449 Rate=8.8/s ETA=95s
+[13050/13838] Done=7551 Failed=5499 Rate=8.8/s ETA=89s
+[13100/13838] Done=7551 Failed=5549 Rate=8.8/s ETA=84s
+[13150/13838] Done=7551 Failed=5599 Rate=8.9/s ETA=78s
+[13200/13838] Done=7551 Failed=5649 Rate=8.9/s ETA=72s
+[13250/13838] Done=7551 Failed=5699 Rate=8.9/s ETA=66s
+[13300/13838] Done=7551 Failed=5749 Rate=8.9/s ETA=60s
+[13350/13838] Done=7551 Failed=5799 Rate=8.9/s ETA=55s
+[13400/13838] Done=7551 Failed=5849 Rate=8.9/s ETA=49s
+[13450/13838] Done=7551 Failed=5899 Rate=8.9/s ETA=43s
+[13500/13838] Done=7551 Failed=5949 Rate=9.0/s ETA=38s
+[13550/13838] Done=7565 Failed=5985 Rate=9.0/s ETA=32s
+[13600/13838] Done=7615 Failed=5985 Rate=8.9/s ETA=27s
+[13650/13838] Done=7665 Failed=5985 Rate=8.9/s ETA=21s
+[13700/13838] Done=7715 Failed=5985 Rate=8.9/s ETA=15s
+[13750/13838] Done=7765 Failed=5985 Rate=8.9/s ETA=10s
+[13800/13838] Done=7815 Failed=5985 Rate=8.9/s ETA=4s
+[13838/13838] Done=7853 Failed=5985 Rate=8.9/s ETA=0s
+
+============================================================
+DOWNLOAD COMPLETE
+Success: 7853/13838
+Failed: 5985
+Output: D:\Internal_H\AgriSmart-AI\data\external\plantvillage\color
+Elapsed: 1558s
+
+Per-class results:
+  Tomato___Bacterial_spot: 800/800
+  Tomato___Early_blight: 756/800
+  Tomato___Late_blight: 0/800
+  Tomato___Leaf_Mold: 288/800
+  Tomato___Septoria_leaf_spot: 800/800
+  Tomato___Spider_mites Two-spotted_spider_mite: 410/800
+  Tomato___Target_Spot: 0/800
+  Tomato___Tomato_Yellow_Leaf_Curl_Virus: 737/800
+  Tomato___Tomato_mosaic_virus: 373/373
+  Tomato___healthy: 388/800
+  Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot: 0/513
+  Corn_(maize)___Common_rust_: 701/800
+  Corn_(maize)___Northern_Leaf_Blight: 798/800
+  Corn_(maize)___healthy: 0/800
+  Potato___Early_blight: 272/800
+  Potato___Late_blight: 800/800
+  Potato___healthy: 152/152
+  Pepper,_bell___Bacterial_spot: 276/800
+  Pepper,_bell___healthy: 302/800

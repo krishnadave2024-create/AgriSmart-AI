@@ -1,50 +1,82 @@
-import os
-import argparse
-import torch
-import torch.nn as nn
-from torchvision.models import resnet18
+import os, sys, json
+from pathlib import Path
 from PIL import Image
-from dataset import get_transforms
+import torch
+import torch.nn.functional as F
 
-def predict(image_path):
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    chkpt_path = os.path.join(project_root, "model", "checkpoints", "baseline_resnet18.pth")
-    
-    if not os.path.exists(chkpt_path):
-        raise FileNotFoundError(f"Model checkpoint missing at {chkpt_path}. Run training first.")
+from dataset import get_transforms
+from train import build_model
+
+# ─── CONFIG ──────────────────────────────────────────────────────────────────
+PROJECT_ROOT   = Path(__file__).parent.parent
+REGISTRY_PATH  = PROJECT_ROOT / "data" / "class_registry.json"
+ARTIFACT_DIR   = PROJECT_ROOT / "model" / "artifacts" / "plant_disease_multiclass"
+CHECKPOINT_PATH = ARTIFACT_DIR / "best_model.pth"
+# ─────────────────────────────────────────────────────────────────────────────
+
+class DiseasePredictor:
+    def __init__(self):
+        # Support loading Colab checkpoint during evaluation/testing
+        checkpoint_path_env = os.environ.get('TEST_CHECKPOINT')
+        ckpt_path = Path(checkpoint_path_env) if checkpoint_path_env else CHECKPOINT_PATH
         
-    checkpoint = torch.load(chkpt_path, weights_only=False, map_location=torch.device('cpu'))
-    classes = checkpoint['classes']
-    num_classes = len(classes)
-    
-    model = resnet18()
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
-    model.load_state_dict(checkpoint['model_state_dict'])
-    model.eval()
-    
-    transform = get_transforms(is_train=False)
-    
-    try:
-        img = Image.open(image_path).convert('RGB')
-    except Exception as e:
-        raise ValueError(f"Failed to open image at {image_path}: {e}")
+        if not ckpt_path.exists():
+            raise FileNotFoundError(f"Missing checkpoint: {ckpt_path}. Cannot predict.")
+            
+        with open(REGISTRY_PATH, 'r') as f:
+            self.registry = json.load(f)
+            
+        self.num_classes = len(self.registry)
+        if self.num_classes != 38:
+            raise ValueError(f"Incompatible registry: Expected 38 classes, found {self.num_classes}")
+            
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
-    img_tensor = transform(img).unsqueeze(0)
-    
-    with torch.no_grad():
-        outputs = model(img_tensor)
-        _, preds = torch.max(outputs, 1)
+        checkpoint = torch.load(ckpt_path, map_location=self.device)
         
-    return classes[preds.item()]
+        # Guard against old binary checkpoint
+        ckpt_classes = checkpoint.get('num_classes', 0)
+        if ckpt_classes == 0 and 'classes' in checkpoint:
+            ckpt_classes = len(checkpoint['classes'])
+        
+        if ckpt_classes != 38:
+            raise ValueError(f"Invalid checkpoint: Checkpoint has {ckpt_classes} classes, expected exactly 38. The old 2-class prototype is strictly forbidden.")
+            
+        self.model, self.arch = build_model(self.num_classes, self.device)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.model.eval()
+        
+        self.transform = get_transforms(is_train=False)
+        
+    def predict(self, image_path: str):
+        image = Image.open(image_path).convert('RGB')
+        tensor = self.transform(image).unsqueeze(0).to(self.device)
+        
+        with torch.no_grad():
+            outputs = self.model(tensor)
+            probs = F.softmax(outputs, dim=1)[0]
+            
+        conf, pred_idx = torch.max(probs, 0)
+        conf = conf.item()
+        pred_idx = str(pred_idx.item())
+        
+        class_info = self.registry[pred_idx]
+        
+        return {
+            "model_version": self.arch,
+            "class_label": class_info['class_label'],
+            "crop": class_info['crop'],
+            "disease": class_info['disease'],
+            "is_healthy": class_info['is_healthy'],
+            "confidence": conf
+        }
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Predict crop disease from image")
-    parser.add_argument("--image", type=str, required=True, help="Path to the image file")
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("image", help="Path to image for prediction")
     args = parser.parse_args()
     
-    try:
-        label = predict(args.image)
-        print(f"Prediction for {args.image}: {label}")
-        print("Note: This is a baseline development model, not production-ready.")
-    except Exception as e:
-        print(f"Error: {e}")
+    predictor = DiseasePredictor()
+    result = predictor.predict(args.image)
+    print(json.dumps(result, indent=2))

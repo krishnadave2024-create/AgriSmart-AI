@@ -1,88 +1,104 @@
-import os
-import torch
-import torch.nn as nn
-from torchvision.models import resnet18
-from dataset import get_dataloader
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, f1_score
-import matplotlib.pyplot as plt
+import os, sys, json
+from pathlib import Path
+import pandas as pd
 import numpy as np
+import torch
+from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, confusion_matrix
+
+from dataset import get_dataloader
+from train import build_model, BATCH_SIZE
+
+# ─── CONFIG ──────────────────────────────────────────────────────────────────
+PROJECT_ROOT   = Path(__file__).parent.parent
+TEST_MANIFEST  = PROJECT_ROOT / "data" / "manifests" / "test.csv"
+REGISTRY_PATH  = PROJECT_ROOT / "data" / "class_registry.json"
+ARTIFACT_DIR   = PROJECT_ROOT / "model" / "artifacts" / "plant_disease_multiclass"
+CHECKPOINT_PATH = ARTIFACT_DIR / "best_model.pth"
+# ─────────────────────────────────────────────────────────────────────────────
 
 def evaluate():
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    test_manifest = os.path.join(project_root, "data", "manifests", "development_test.csv")
-    chkpt_path = os.path.join(project_root, "model", "checkpoints", "baseline_resnet18.pth")
+    print("=" * 60)
+    print("Evaluating Model on Held-out Test Set")
+    print("=" * 60)
     
-    if not os.path.exists(test_manifest) or not os.path.exists(chkpt_path):
-        print("Manifest or checkpoint not found.")
-        return
+    checkpoint_path_env = os.environ.get('TEST_CHECKPOINT')
+    ckpt_path = Path(checkpoint_path_env) if checkpoint_path_env else CHECKPOINT_PATH
+    
+    if not ckpt_path.exists():
+        print(f"ERROR: Checkpoint not found at {ckpt_path}")
+        sys.exit(1)
         
-    checkpoint = torch.load(chkpt_path, weights_only=False)
-    classes = checkpoint['classes']
-    num_classes = len(classes)
+    with open(REGISTRY_PATH, 'r') as f:
+        registry = json.load(f)
+    num_classes = len(registry)
+    
+    # In python 3.7+ dicts maintain insertion order, but we should sort to be safe
+    class_labels = [registry[str(i)]['class_label'] for i in range(num_classes)]
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = resnet18()
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
+    
+    print(f"Loading checkpoint...")
+    checkpoint = torch.load(ckpt_path, map_location=device)
+    model, arch = build_model(num_classes, device)
     model.load_state_dict(checkpoint['model_state_dict'])
-    model = model.to(device)
     model.eval()
     
-    test_loader = get_dataloader(test_manifest, batch_size=4, is_train=False)
+    print(f"Loading test dataset...")
+    test_loader = get_dataloader(str(TEST_MANIFEST), batch_size=BATCH_SIZE, is_train=False)
     
-    all_preds = []
-    all_labels = []
+    all_preds, all_labels = [], []
     
+    print(f"Running inference on {len(test_loader.dataset)} test images...")
     with torch.no_grad():
         for inputs, labels in test_loader:
             inputs = inputs.to(device)
             outputs = model(inputs)
-            _, preds = torch.max(outputs, 1)
+            preds = outputs.argmax(dim=1)
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(labels.numpy())
             
-    # Calculate metrics
+    # Metrics
     acc = accuracy_score(all_labels, all_preds)
     macro_f1 = f1_score(all_labels, all_preds, average='macro', zero_division=0)
-    report = classification_report(all_labels, all_preds, target_names=classes, zero_division=0)
+    weighted_f1 = f1_score(all_labels, all_preds, average='weighted', zero_division=0)
+    
+    precisions = precision_score(all_labels, all_preds, average=None, zero_division=0)
+    recalls = recall_score(all_labels, all_preds, average=None, zero_division=0)
+    f1s = f1_score(all_labels, all_preds, average=None, zero_division=0)
+    
     cm = confusion_matrix(all_labels, all_preds)
     
-    # Save text report
-    report_dir = os.path.join(project_root, "data", "reports")
-    os.makedirs(report_dir, exist_ok=True)
+    print("\n--- Test Results ---")
+    print(f"Accuracy:    {acc:.4f}")
+    print(f"Macro F1:    {macro_f1:.4f}")
+    print(f"Weighted F1: {weighted_f1:.4f}")
     
-    with open(os.path.join(report_dir, "baseline_evaluation_report.md"), "w") as f:
-        f.write("# Baseline Evaluation Report\n")
-        f.write("**Important: This is preliminary development data only. Not for final SIH evaluation.**\n\n")
-        f.write(f"- **Test Samples**: {len(test_loader.dataset)}\n")
-        f.write(f"- **Accuracy**: {acc:.4f}\n")
-        f.write(f"- **Macro-F1**: {macro_f1:.4f}\n\n")
-        f.write("## Per-Class Metrics\n```text\n")
-        f.write(report)
-        f.write("\n```\n")
-        f.write("## Confusion Matrix\n")
-        f.write(str(cm))
-        f.write("\n")
+    # Save Metrics
+    metrics_json = {
+        "architecture": arch,
+        "test_images": len(all_labels),
+        "classes": num_classes,
+        "accuracy": round(acc, 4),
+        "macro_f1": round(macro_f1, 4),
+        "weighted_f1": round(weighted_f1, 4)
+    }
+    with open(ARTIFACT_DIR / "metrics.json", 'w') as f:
+        json.dump(metrics_json, f, indent=4)
         
-    print(f"Accuracy: {acc:.4f} | Macro-F1: {macro_f1:.4f}")
+    # Save Per-class metrics
+    per_class_df = pd.DataFrame({
+        'class_label': class_labels,
+        'precision': np.round(precisions, 4),
+        'recall': np.round(recalls, 4),
+        'f1_score': np.round(f1s, 4)
+    })
+    per_class_df.to_csv(ARTIFACT_DIR / "per_class_metrics.csv", index=False)
     
-    # Save CM plot
-    fig, ax = plt.subplots()
-    cax = ax.matshow(cm, cmap=plt.cm.Blues)
-    plt.title('Confusion Matrix')
-    fig.colorbar(cax)
-    ax.set_xticks(np.arange(len(classes)))
-    ax.set_yticks(np.arange(len(classes)))
-    ax.set_xticklabels(classes)
-    ax.set_yticklabels(classes)
-    plt.xlabel('Predicted')
-    plt.ylabel('True')
+    # Save Confusion Matrix
+    cm_df = pd.DataFrame(cm, index=class_labels, columns=class_labels)
+    cm_df.to_csv(ARTIFACT_DIR / "confusion_matrix.csv")
     
-    for i in range(len(classes)):
-        for j in range(len(classes)):
-            ax.text(j, i, str(cm[i, j]), va='center', ha='center')
-            
-    plt.savefig(os.path.join(report_dir, "confusion_matrix.png"))
-    print(f"Evaluation complete. Reports saved to {report_dir}")
+    print(f"\nArtifacts saved to {ARTIFACT_DIR}")
 
 if __name__ == "__main__":
     evaluate()
