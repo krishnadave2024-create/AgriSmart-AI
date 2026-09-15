@@ -75,12 +75,14 @@ function FarmerAssistant() {
     
     setInput('')
     
-    if (retryMsgObj) {
-        setMessages(p => p.filter(m => m !== retryMsgObj))
-    } else {
-        const newMsg = { role: 'user', content: text, language: lang }
-        setMessages(p => [...p, newMsg])
-    }
+    // Remove all previous error messages from the chat UI
+    setMessages(p => {
+        let filtered = p.filter(m => !m.isError)
+        if (!retryMsgObj) {
+            filtered = [...filtered, { role: 'user', content: text, language: lang }]
+        }
+        return filtered
+    })
     
     setLoading(true)
     
@@ -90,7 +92,7 @@ function FarmerAssistant() {
       if (r.data.success) {
           setMessages(p => [...p, { 
               role: 'assistant', 
-              content: r.data.answer, 
+              content: r.data.message, 
               source: r.data.source, 
               model_status: r.data.model_status,
               timestamp: r.data.timestamp || new Date().toISOString()

@@ -955,7 +955,7 @@ def farmer_assistant(request):
             AssistantMessage.objects.create(
                 user=user,
                 message=message,
-                response=response_data.get('answer'),
+                response=response_data.get('message'),
                 source=response_data.get('source', 'gemini'),
                 model_status=response_data.get('model_status', 'live')
             )
@@ -974,7 +974,7 @@ def farmer_assistant(request):
         traceback.print_exc()
         return Response({
             'success': False,
-            'answer': None,
+            'message': None,
             'error': 'An unexpected server error occurred.',
             'model_status': 'error'
         }, status=500)

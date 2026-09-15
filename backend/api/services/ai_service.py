@@ -67,7 +67,7 @@ Here is the user's verified farm context (use it only if relevant to their quest
                 )
             )
             return True, 200, {
-                'answer': response.text,
+                'message': response.text,
                 'source': 'gemini',
                 'model_status': 'live'
             }
